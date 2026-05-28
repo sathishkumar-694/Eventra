@@ -1,7 +1,7 @@
-import bcrypt from "bcrypt"
-import { createUser, userExists } from "./auth.repository.js";
+import { createUser, findUserById, userExists } from "./auth.repository.js";
 import ApiError from "../../utils/ApiError.js";
 import { comparePassword, hashPassword } from "../../utils/bcrypt.js";
+import { generateToken } from "../../utils/jwt.js";
 
 const DUMMY_HASH = process.env.DUMMY_HASH
 
@@ -13,6 +13,7 @@ export const registerService = async(username , email , password)=>
 
     const hashedPass = await hashPassword(password);
     const result = await createUser(username , email , hashedPass);
+
     if(result.affectedRows === 0)
         throw new ApiError(500 ,"Server error" )
 
@@ -28,7 +29,13 @@ export const loginService = async(email , password)=>
     if(!user || !isMatch)
         throw new ApiError(400 , "Invalid credentials");
     delete user.password;
-    return user;        
+    const token = await generateToken(user)
+    return {user,token};        
 }
 
+export const profileService = async(id)=>
+{
+    const user = await findUserById(id);
+    return user;
 
+}

@@ -15,3 +15,15 @@ export const createUser = async(username ,email , password)=>
     // console.log("createrow" , result);
     return rows;
 }
+
+export const findUserById = async(id)=>
+{
+    const [rows] = await pool.query(
+        "SELECT * FROM users WHERE id = ?",
+        [id]
+    );
+
+    console.log(rows[0]);
+
+    return rows[0];
+}
