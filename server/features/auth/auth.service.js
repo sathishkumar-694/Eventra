@@ -1,21 +1,34 @@
 import bcrypt from "bcrypt"
 import { createUser, userExists } from "./auth.repository.js";
+import ApiError from "../../utils/ApiError.js";
+import { comparePassword, hashPassword } from "../../utils/bcrypt.js";
+
+const DUMMY_HASH = process.env.DUMMY_HASH
+
 export const registerService = async(username , email , password)=>
 {
     const user = await userExists(email);
     if(user.length > 0)
-        throw new Error("User already exists");
+        throw new ApiError(400 , "User already exists");
 
     const hashedPass = await hashPassword(password);
     const result = await createUser(username , email , hashedPass);
-    console.log(result)
     if(result.affectedRows === 0)
-        throw new Error("Server error" )
+        throw new ApiError(500 ,"Server error" )
 
     return result;
 }
-
-export const hashPassword = async(password)=>
+export const loginService = async(email , password)=>
 {
-    return await bcrypt.hash(password,10)
+    const [user] = await userExists(email);
+
+    const userPass = user? user.password : DUMMY_HASH;
+    const isMatch = await comparePassword(password , userPass)
+
+    if(!user || !isMatch)
+        throw new ApiError(400 , "Invalid credentials");
+    delete user.password;
+    return user;        
 }
+
+
