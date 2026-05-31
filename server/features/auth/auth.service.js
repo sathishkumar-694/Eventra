@@ -2,6 +2,7 @@ import { createUser, findUserById, userExists } from "./auth.repository.js";
 import ApiError from "../../utils/ApiError.js";
 import { comparePassword, hashPassword } from "../../utils/bcrypt.js";
 import { generateToken } from "../../utils/jwt.js";
+import { randomUUID } from "crypto";
 
 const DUMMY_HASH = process.env.DUMMY_HASH
 
@@ -12,7 +13,8 @@ export const registerService = async(username , email , password)=>
         throw new ApiError(400 , "User already exists");
 
     const hashedPass = await hashPassword(password);
-    const result = await createUser(username , email , hashedPass);
+    const userId = await randomUUID();
+    const result = await createUser(userId , username , email , hashedPass);
 
     if(result.affectedRows === 0)
         throw new ApiError(500 ,"Server error" )

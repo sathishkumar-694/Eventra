@@ -4,8 +4,7 @@ import { registerSchema } from "./auth.validation.js";
 
 export const registerController = async (req, res, next) => {
   try {
-	const result = req.body;
-    const { username, email, password } = result;
+    const { username, email, password} = req.body;
     await registerService(username, email, password);
 
     return res.status(201).json({
@@ -20,8 +19,7 @@ export const registerController = async (req, res, next) => {
 export const loginController = async(req , res , next)=>
 {
 	try {
-		const result = req.body;
-		const {email , password} = result;
+		const {email , password} = req.body;
 		const {user , token} = await loginService(email , password);
 
 		return res.status(200).json({
