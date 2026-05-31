@@ -4,6 +4,8 @@ import cors from "cors";
 import { testDB } from "./database/db.js";
 import authRoutes from "./features/auth/auth.routes.js"
 import errorMiddleware from "./middleware/error.middleware.js";
+import eventRoutes from "./features/events/event.routes.js";
+import { validate } from "./middleware/validate.middleware.js";
 dotenv.config();
 
 const PORT = process.env.PORT;
@@ -14,7 +16,11 @@ app.use(express.json());
 app.use(cors());
 app.use("/api/auth", authRoutes);
 
-app.use(errorMiddleware);
+app.use("/api/auth", authRoutes);
+app.use("/api/events" , eventRoutes);
+
+
+
 app.get("/health", async (req, res) => {
   try {
     const data = await testDB();
@@ -32,6 +38,7 @@ app.get("/health", async (req, res) => {
     });
   }
 });
+app.use(errorMiddleware);
 
 app.listen(PORT, () => {
   console.log("Server is running successfully on port", PORT);
