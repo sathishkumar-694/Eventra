@@ -1,7 +1,7 @@
 import { pool } from "../../database/db.js";
 
 export const getAllEventsRepository = async () => {
-  const [rows] = await pool.query("SELECT * FROM events");
+  const [rows] = await pool.query("SELECT * FROM events where approval_status = ?" , ["APPROVED"]);
   return rows;
 };
 
@@ -52,6 +52,7 @@ export const createEventRepository = async (eventData, public_id, userId) => {
 export const updateEventRepository = async (eventId, updateData) => {
   const fields = [];
   const values = [];
+
 
   Object.entries(updateData).forEach(([key, value]) => {
     fields.push(`${key} = ?`);

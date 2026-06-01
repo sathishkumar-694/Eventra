@@ -6,6 +6,7 @@ import authRoutes from "./features/auth/auth.routes.js"
 import errorMiddleware from "./middleware/error.middleware.js";
 import eventRoutes from "./features/events/event.routes.js";
 import { validate } from "./middleware/validate.middleware.js";
+import adminRoutes from "./features/admin/admin.routes.js";
 dotenv.config();
 
 const PORT = process.env.PORT;
@@ -18,7 +19,7 @@ app.use("/api/auth", authRoutes);
 
 app.use("/api/auth", authRoutes);
 app.use("/api/events" , eventRoutes);
-
+app.use("/api/admin" , adminRoutes);
 
 
 app.get("/health", async (req, res) => {
