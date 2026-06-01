@@ -11,12 +11,7 @@ import ApiError from "../../utils/ApiError.js";
 import { randomUUID } from "crypto";
 
 export const getAllEventsService = async () => {
-  const response = await getAllEventsRepository();
-
-  if (!response) {
-    throw new ApiError(500, "Could not fetch events");
-  }
-  
+  const response = await getAllEventsRepository();  
   return response;
 };
 
@@ -60,9 +55,16 @@ export const updateEventService = async (eventId, eventData, userId) => {
     throw new ApiError(403, "You are not authorized to update this event");
   }
 
+  if(eventData.title != null)
+  {
+    const check = await getEventByNameRepository(eventData.title);
+    if(check.length > 0 && check[0].id !== eventId )
+      throw new ApiError(400 , "Event with the name already exists")
+  }
+
   const result = await updateEventRepository(eventId, eventData);
 
-  if (result.affectedRows === 0) {
+  if (result.changedRows === 0) {
     throw new ApiError(500, "Failed to update event");
   }
 
@@ -85,7 +87,7 @@ export const deleteEventService = async (eventId, userId) => {
   const result = await deleteEventRepository(eventId);
 
   if (result.affectedRows === 0) {
-    throw new ApiError(500, "Failed to delete event");
+    throw new ApiError(404, "Event not found");
   }
 
   return result;
