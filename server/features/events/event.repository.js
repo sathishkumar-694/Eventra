@@ -6,14 +6,13 @@ export const getAllEventsRepository = async () => {
 };
 
 export const getEventByIdRepository = async (id) => {
-  const [rows] = await pool.query("SELECT * FROM events WHERE id =?", [id]);
+  const [rows] = await pool.query("SELECT * FROM events WHERE id =? AND approval_status = ?", [id , "APPROVED"]);
   return rows;
 };
 
 export const getEventByNameRepository = async (name) => {
-  const [rows] = await pool.query("SELECT * FROM events WHERE title = ?", [
-    name,
-  ]);
+  const [rows] = await pool.query("SELECT * FROM events WHERE title = ? AND approval_status = ?", 
+    [name,"APPROVED"]);
   return rows;
 };
 
@@ -67,7 +66,7 @@ export const updateEventRepository = async (eventId, updateData) => {
     SET ${fields.join(", ")}
     WHERE id = ?
     `,
-    values,
+    [values],
   );
 
   return result;
