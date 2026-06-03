@@ -11,8 +11,18 @@ export const getEventByIdRepository = async (id) => {
 };
 
 export const getEventByNameRepository = async (name) => {
-  const [rows] = await pool.query("SELECT * FROM events WHERE title = ? AND approval_status = ?", 
-    [name,"APPROVED"]);
+  const [rows] = await pool.query(
+    "SELECT * FROM events WHERE title = ?",
+    [name],
+  );
+  return rows;
+};
+
+export const getOrganizerEventsRepository = async (userId) => {
+  const [rows] = await pool.query(
+    "SELECT * FROM events WHERE organizer_id = ?",
+    [userId],
+  );
   return rows;
 };
 

@@ -4,12 +4,27 @@ import {
   getEventByIdService,
   updateEventService,
   deleteEventService,
+  getOrganizerEventsService,
 } from "./event.service.js";
 
 export const getAllEventsController = async (req, res, next) => {
   try {
     const response = await getAllEventsService();
 
+    return res.status(200).json({
+      success: true,
+      data: response,
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const getOrganizerEventsController = async (req, res, next) => {
+  try {
+    const userId = req.user.id;
+    const response = await getOrganizerEventsService(userId);
+    
     return res.status(200).json({
       success: true,
       data: response,
