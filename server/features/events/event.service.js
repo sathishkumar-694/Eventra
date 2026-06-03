@@ -5,6 +5,7 @@ import {
   getEventByIdRepository,
   getEventByNameRepository,
   updateEventRepository,
+  getOrganizerEventsRepository,
 } from "./event.repository.js";
 
 import ApiError from "../../utils/ApiError.js";
@@ -15,10 +16,15 @@ export const getAllEventsService = async () => {
   return response;
 };
 
+export const getOrganizerEventsService = async (userId) => {
+  const response = await getOrganizerEventsRepository(userId);
+  return response;
+};
+
 export const getEventByIdService = async (id) => {
   const response = await getEventByIdRepository(id);
 
-  if (response.length === 0) {
+  if (response.length === 0 || response[0].approval_status !== "APPROVED") {
     throw new ApiError(404, "Event not found");
   }
 
