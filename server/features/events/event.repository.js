@@ -1,19 +1,34 @@
 import { pool } from "../../database/db.js";
 
 export const getAllEventsRepository = async () => {
-  const [rows] = await pool.query("SELECT * FROM events");
+  const [rows] = await pool.query(
+    "SELECT * FROM events where approval_status = ?",
+    ["APPROVED"],
+  );
   return rows;
 };
 
 export const getEventByIdRepository = async (id) => {
-  const [rows] = await pool.query("SELECT * FROM events WHERE id =?", [id]);
+  const [rows] = await pool.query(
+    "SELECT * FROM events WHERE id = ?",
+    [id],
+  );
   return rows;
 };
 
 export const getEventByNameRepository = async (name) => {
-  const [rows] = await pool.query("SELECT * FROM events WHERE title = ?", [
-    name,
-  ]);
+  const [rows] = await pool.query(
+    "SELECT * FROM events WHERE title = ?",
+    [name],
+  );
+  return rows;
+};
+
+export const getOrganizerEventsRepository = async (userId) => {
+  const [rows] = await pool.query(
+    "SELECT * FROM events WHERE organizer_id = ?",
+    [userId],
+  );
   return rows;
 };
 
