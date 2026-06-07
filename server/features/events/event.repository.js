@@ -76,7 +76,7 @@ export const updateEventRepository = async (eventId, updateData) => {
     SET ${fields.join(", ")}
     WHERE id = ?
     `,
-    [values],
+    values,
   );
 
   return result;
