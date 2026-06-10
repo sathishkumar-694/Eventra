@@ -4,11 +4,14 @@ import { getMe } from "../../middleware/auth.middleware.js";
 import { authorize } from "../../middleware/authorize.middleware.js";
 import {
   approveEventsController,
+  approveRoleRequestController,
   getAllEventsController,
+  getAllRoleRequestsController,
   getApprovedEventsController,
   getPendingEventsController,
   getRejectedEventsController,
   rejectEventsController,
+  rejectRoleRequestController,
 } from "./admin.controller.js";
 import { validate } from "../../middleware/validate.middleware.js";
 import { rejectEventSchema } from "./admin.validate.js";
@@ -48,5 +51,9 @@ adminRoutes.patch(
   validate(rejectEventSchema),
   rejectEventsController,
 );
+
+adminRoutes.get("/role-requests", getMe, authorize("ADMIN"), getAllRoleRequestsController);
+adminRoutes.patch("/role-requests/:id/approve", getMe, authorize("ADMIN"), approveRoleRequestController);
+adminRoutes.patch("/role-requests/:id/reject", getMe, authorize("ADMIN"), validate(rejectEventSchema), rejectRoleRequestController);
 
 export default adminRoutes;

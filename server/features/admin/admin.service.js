@@ -3,11 +3,15 @@ import {
   approveEventsRepository,
   getAllEventsRepository,
   getAllPendingEventsRepository,
+  getAllPendingRoleRequestsRepository,
   getApprovedEventsRepository,
   getEventByIdRepository,
   getRejectedEventsRepository,
   rejectEventsRepository,
+  updateRoleRequestStatusRepository,
+  updateUserRoleRepository,
 } from "./admin.repository.js";
+import { getRoleRequestByIdRepository } from "../role/role.repostiory.js";
 
 export const getAllEventsService = async () => {
   const response = await getAllEventsRepository();
@@ -31,14 +35,12 @@ export const getRejectedEventsService = async () => {
 
 export const approveEventsService = async (id, adminId) => {
   const response = await getEventByIdRepository(id);
-  console.log("service getById",response);
   if (response.length == 0) throw new ApiError(404, "Event not found");
 
   if (response[0].approval_status == "APPROVED")
     throw new ApiError(400, "Already approved");
 
   const approveEvent = await approveEventsRepository(id, adminId);
-  console.log("service approve:" ,approveEvent)
   if (approveEvent.affectedRows == 0)
     throw new ApiError(500, "Unable to approve event");
 
@@ -57,4 +59,42 @@ export const rejectEventsService = async (id, reason, adminId) => {
     throw new ApiError(500, "Unable to reject event");
 
   return rejectEvent;
+};
+
+export const getAllRoleRequestsService = async () => {
+  return await getAllPendingRoleRequestsRepository();
+};
+
+export const approveRoleRequestService = async (requestId, adminId) => {
+  const rows = await getRoleRequestByIdRepository(requestId);
+  if (rows.length === 0) throw new ApiError(404, "Role request not found");
+
+  const request = rows[0];
+  if (request.status !== "PENDING")
+    throw new ApiError(400, `Role request is already ${request.status}`);
+
+  const statusResult = await updateRoleRequestStatusRepository(requestId, "APPROVED", adminId);
+  if (statusResult.affectedRows === 0)
+    throw new ApiError(500, "Failed to update role request status");
+
+  const roleResult = await updateUserRoleRepository(request.user_id, "ORGANIZER");
+  if (roleResult.affectedRows === 0)
+    throw new ApiError(500, "Failed to update user role");
+
+  return { requestId, userId: request.user_id, newRole: "ORGANIZER" };
+};
+
+export const rejectRoleRequestService = async (requestId, adminId, reason) => {
+  const rows = await getRoleRequestByIdRepository(requestId);
+  if (rows.length === 0) throw new ApiError(404, "Role request not found");
+
+  const request = rows[0];
+  if (request.status !== "PENDING")
+    throw new ApiError(400, `Role request is already ${request.status}`);
+
+  const statusResult = await updateRoleRequestStatusRepository(requestId, "REJECTED", adminId, reason);
+  if (statusResult.affectedRows === 0)
+    throw new ApiError(500, "Failed to update role request status");
+
+  return { requestId, userId: request.user_id, status: "REJECTED" };
 };

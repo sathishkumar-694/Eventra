@@ -41,7 +41,6 @@ export const approveEventsRepository = async (id, adminId) => {
     "UPDATE events SET approval_status = ? , approved_by = ? where id = ? ",
     ["APPROVED", adminId, id],
   );
-  console.log("repo approve"  ,rows);
   return rows;
 };
 
@@ -51,4 +50,31 @@ export const rejectEventsRepository = async (id, reason, adminId) => {
     ["REJECTED", reason, adminId, id],
   );
   return rows;
+};
+
+export const getAllPendingRoleRequestsRepository = async () => {
+  const [rows] = await pool.query(
+    `SELECT rr.id, rr.user_id, rr.reason, rr.status, rr.created_at,
+            u.name AS user_name, u.email AS user_email
+     FROM role_requests rr
+     JOIN users u ON u.id = rr.user_id
+     ORDER BY rr.created_at DESC`
+  );
+  return rows;
+};
+
+export const updateRoleRequestStatusRepository = async (requestId, status, adminId, rejectionReason = null) => {
+  const [result] = await pool.execute(
+    "UPDATE role_requests SET status = ?, reviewed_by = ?, rejection_reason = ? WHERE id = ?",
+    [status, adminId, rejectionReason, requestId]
+  );
+  return result;
+};
+
+export const updateUserRoleRepository = async (userId, role) => {
+  const [result] = await pool.execute(
+    "UPDATE users SET role = ? WHERE id = ?",
+    [role, userId]
+  );
+  return result;
 };
