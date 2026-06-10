@@ -6,9 +6,9 @@ export const getUserBookingRepository = async(userId)=>
     return result;
 }
 
-export const getBookingsByIdRepository = async(bookingId)=>
+export const getBookingsByIdRepository = async(bookingId, userId)=>
 {
-    const [result] = await pool.execute("SELECT * from bookings where id = ?" , [bookingId]) ;
+    const [result] = await pool.execute("SELECT * from bookings where id = ? AND user_id = ?" , [bookingId, userId]) ;
     return result;
 }
 

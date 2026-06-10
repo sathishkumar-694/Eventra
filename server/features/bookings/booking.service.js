@@ -15,7 +15,9 @@ export const createBookingService = async (userId, eventId, seatsBooked) => {
   if (events.length === 0)
     throw new ApiError(404, "Event not found or not approved");
 
-  const decrement = await decrementSeats(eventId, seatsBooked);
+  const event = events[0];
+
+  const decrement = await decrementSeats(event.id, seatsBooked);
   if (decrement.affectedRows === 0)
     throw new ApiError(400, "Not enough available seats");
 
@@ -23,8 +25,8 @@ export const createBookingService = async (userId, eventId, seatsBooked) => {
   const result = await createBookingRepository(
     bookingId,
     userId,
-    eventId,
-    seatsBooked
+    event.id,
+    seatsBooked,
   );
 
   if (result.affectedRows === 0)
@@ -39,14 +41,11 @@ export const getUserBookingsService = async (userId) => {
 };
 
 export const cancelBookingService = async (bookingId, userId) => {
-  const bookings = await getBookingsByIdRepository(bookingId);
-  if (bookings.length === 0) 
-    throw new ApiError(404, "Booking not found");
+  const bookings = await getBookingsByIdRepository(bookingId, userId);
+  if (bookings.length === 0)
+    throw new ApiError(404, "Booking not found or you are not authorized");
 
   const booking = bookings[0];
-
-  if (booking.user_id !== userId)
-    throw new ApiError(403, "You are not authorized to cancel this booking");
 
   if (booking.booking_status === "CANCELLED")
     throw new ApiError(400, "Booking is already cancelled");

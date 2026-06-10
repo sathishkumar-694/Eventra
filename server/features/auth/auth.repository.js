@@ -18,8 +18,5 @@ export const findUserById = async(id)=>
         "SELECT * FROM users WHERE id = ?",
         [id]
     );
-
-    console.log(rows[0]);
-
     return rows[0];
 }
