@@ -1,16 +1,18 @@
-import {pool} from "../../database/db.js";
+import { pool } from "../../database/db.js";
 
 export const getAllEventsRepository = async () => {
   const [rows] = await pool.query("SELECT * FROM events");
   return rows;
 };
 
-export const getEventByIdRepository = async(id)=>
-{
-  const [rows , fields] = await pool.query("SELECT * FROM events where id = ?" , id);
-  
+export const getEventByIdRepository = async (id) => {
+  const [rows, fields] = await pool.query(
+    "SELECT * FROM events where id = ?",
+    id,
+  );
+
   return rows;
-}
+};
 export const getAllPendingEventsRepository = async () => {
   const [rows] = await pool.query(
     "SELECT * FROM events WHERE approval_status = ?",
@@ -18,7 +20,6 @@ export const getAllPendingEventsRepository = async () => {
   );
   return rows;
 };
-
 
 export const getApprovedEventsRepository = async () => {
   const [rows] = await pool.query(
@@ -37,7 +38,7 @@ export const getRejectedEventsRepository = async () => {
 };
 
 export const approveEventsRepository = async (id, adminId) => {
-  const [rows , fields] = await pool.query(
+  const [rows, fields] = await pool.query(
     "UPDATE events SET approval_status = ? , approved_by = ? where id = ? ",
     ["APPROVED", adminId, id],
   );
@@ -45,7 +46,7 @@ export const approveEventsRepository = async (id, adminId) => {
 };
 
 export const rejectEventsRepository = async (id, reason, adminId) => {
-  const [rows , fields] = await pool.query(
+  const [rows, fields] = await pool.query(
     "UPDATE events SET approval_status = ? , rejection_reason = ?, approved_by = ? where id = ?",
     ["REJECTED", reason, adminId, id],
   );
@@ -55,18 +56,23 @@ export const rejectEventsRepository = async (id, reason, adminId) => {
 export const getAllPendingRoleRequestsRepository = async () => {
   const [rows] = await pool.query(
     `SELECT rr.id, rr.user_id, rr.reason, rr.status, rr.created_at,
-            u.name AS user_name, u.email AS user_email
-     FROM role_requests rr
+            u.username AS user_name, u.email AS user_email
+     FROM organizer_requests rr
      JOIN users u ON u.id = rr.user_id
-     ORDER BY rr.created_at DESC`
+     ORDER BY rr.created_at DESC`,
   );
   return rows;
 };
 
-export const updateRoleRequestStatusRepository = async (requestId, status, adminId, rejectionReason = null) => {
+export const updateRoleRequestStatusRepository = async (
+  requestId,
+  status,
+  adminId,
+  rejectionReason = null,
+) => {
   const [result] = await pool.execute(
-    "UPDATE role_requests SET status = ?, reviewed_by = ?, rejection_reason = ? WHERE id = ?",
-    [status, adminId, rejectionReason, requestId]
+    "UPDATE organizer_requests SET status = ?, reviewed_by = ?, rejection_reason = ? WHERE id = ?",
+    [status, adminId, rejectionReason, requestId],
   );
   return result;
 };
@@ -74,7 +80,7 @@ export const updateRoleRequestStatusRepository = async (requestId, status, admin
 export const updateUserRoleRepository = async (userId, role) => {
   const [result] = await pool.execute(
     "UPDATE users SET role = ? WHERE id = ?",
-    [role, userId]
+    [role, userId],
   );
   return result;
 };

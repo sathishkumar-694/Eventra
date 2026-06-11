@@ -12,6 +12,7 @@ import {
   getRejectedEventsController,
   rejectEventsController,
   rejectRoleRequestController,
+  revokeRoleRequestController,
 } from "./admin.controller.js";
 import { validate } from "../../middleware/validate.middleware.js";
 import { rejectEventSchema } from "./admin.validate.js";
@@ -52,8 +53,30 @@ adminRoutes.patch(
   rejectEventsController,
 );
 
-adminRoutes.get("/role-requests", getMe, authorize("ADMIN"), getAllRoleRequestsController);
-adminRoutes.patch("/role-requests/:id/approve", getMe, authorize("ADMIN"), approveRoleRequestController);
-adminRoutes.patch("/role-requests/:id/reject", getMe, authorize("ADMIN"), validate(rejectEventSchema), rejectRoleRequestController);
+adminRoutes.get(
+  "/role-requests",
+  getMe,
+  authorize("ADMIN"),
+  getAllRoleRequestsController,
+);
+adminRoutes.patch(
+  "/role-requests/:id/approve",
+  getMe,
+  authorize("ADMIN"),
+  approveRoleRequestController,
+);
+adminRoutes.patch(
+  "/role-requests/:id/reject",
+  getMe,
+  authorize("ADMIN"),
+  validate(rejectEventSchema),
+  rejectRoleRequestController,
+);
+adminRoutes.patch(
+  "/role-requests/:id/revoke",
+  getMe,
+  authorize("ADMIN"),
+  revokeRoleRequestController,
+);
 
 export default adminRoutes;

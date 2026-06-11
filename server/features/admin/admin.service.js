@@ -86,7 +86,8 @@ export const approveRoleRequestService = async (requestId, adminId) => {
 
 export const rejectRoleRequestService = async (requestId, adminId, reason) => {
   const rows = await getRoleRequestByIdRepository(requestId);
-  if (rows.length === 0) throw new ApiError(404, "Role request not found");
+  if (rows.length === 0) 
+    throw new ApiError(404, "Role request not found");
 
   const request = rows[0];
   if (request.status !== "PENDING")
@@ -97,4 +98,24 @@ export const rejectRoleRequestService = async (requestId, adminId, reason) => {
     throw new ApiError(500, "Failed to update role request status");
 
   return { requestId, userId: request.user_id, status: "REJECTED" };
+};
+
+export const revokeRoleRequestService = async (requestId, adminId) => {
+  const rows = await getRoleRequestByIdRepository(requestId);
+  if (rows.length === 0)
+    throw new ApiError(404, "Role request not found");
+
+  const request = rows[0];
+  if (request.status !== "APPROVED")
+    throw new ApiError(400, `Cannot revoke a request with status: ${request.status}`);
+
+  const statusResult = await updateRoleRequestStatusRepository(requestId, "REVOKED", adminId);
+  if (statusResult.affectedRows === 0)
+    throw new ApiError(500, "Failed to revoke role request");
+
+  const roleResult = await updateUserRoleRepository(request.user_id, "USER");
+  if (roleResult.affectedRows === 0)
+    throw new ApiError(500, "Failed to downgrade user role");
+
+  return { requestId, userId: request.user_id, role: "USER" };
 };
