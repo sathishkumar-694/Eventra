@@ -1,5 +1,6 @@
 import { randomUUID } from "crypto";
 import ApiError from "../../utils/ApiError.js";
+import { pool } from "../../database/db.js";
 import { getEventByIdRepository } from "../events/event.repository.js";
 import {
   cancelBookingRepository,
@@ -17,22 +18,33 @@ export const createBookingService = async (userId, eventId, seatsBooked) => {
 
   const event = events[0];
 
-  const decrement = await decrementSeats(event.id, seatsBooked);
-  if (decrement.affectedRows === 0)
-    throw new ApiError(400, "Not enough available seats");
+  const conn = await pool.getConnection();
+  try {
+    await conn.beginTransaction();
 
-  const bookingId = randomUUID();
-  const result = await createBookingRepository(
-    bookingId,
-    userId,
-    event.id,
-    seatsBooked,
-  );
+    const decrement = await decrementSeats(conn, event.id, seatsBooked);
+    if (decrement.affectedRows === 0)
+      throw new ApiError(400, "Not enough available seats");
 
-  if (result.affectedRows === 0)
-    throw new ApiError(500, "Failed to create booking");
+    const bookingId = randomUUID();
+    const result = await createBookingRepository(
+      conn,
+      bookingId,
+      userId,
+      event.id,
+      seatsBooked,
+    );
+    if (result.affectedRows === 0)
+      throw new ApiError(500, "Failed to create booking");
 
-  return { id: bookingId, affectedRows: result.affectedRows };
+    await conn.commit();
+    return { id: bookingId, affectedRows: result.affectedRows };
+  } catch (error) {
+    await conn.rollback();
+    throw error;
+  } finally {
+    conn.release();
+  }
 };
 
 export const getUserBookingsService = async (userId) => {
@@ -50,11 +62,22 @@ export const cancelBookingService = async (bookingId, userId) => {
   if (booking.booking_status === "CANCELLED")
     throw new ApiError(400, "Booking is already cancelled");
 
-  const result = await cancelBookingRepository(bookingId);
-  if (result.affectedRows === 0)
-    throw new ApiError(500, "Failed to cancel booking");
+  const conn = await pool.getConnection();
+  try {
+    await conn.beginTransaction();
 
-  await incrementSeats(booking.event_id, booking.ticket_count);
+    const result = await cancelBookingRepository(conn, bookingId);
+    if (result.affectedRows === 0)
+      throw new ApiError(500, "Failed to cancel booking");
 
-  return result;
+    await incrementSeats(conn, booking.event_id, booking.ticket_count);
+
+    await conn.commit();
+    return result;
+  } catch (error) {
+    await conn.rollback();
+    throw error;
+  } finally {
+    conn.release();
+  }
 };
