@@ -3,6 +3,7 @@ import dotenv from "dotenv";
 import cors from "cors";
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
+import cookieParser from "cookie-parser";
 import { testDB } from "./database/db.js";
 import authRoutes from "./features/auth/auth.routes.js";
 import errorMiddleware from "./middleware/error.middleware.js";
@@ -26,6 +27,7 @@ const authLimiter = rateLimit({
 const app = express();
 
 app.use(express.json());
+app.use(cookieParser());
 app.use(
   cors({
     origin: process.env.FRONTEND_URL,

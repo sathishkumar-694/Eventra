@@ -20,3 +20,27 @@ export const findUserById = async(id)=>
     );
     return rows[0];
 }
+
+export const saveRefreshTokenRepository = async (id, userId, token, expiresAt) => {
+    const [result] = await pool.query(
+        "INSERT INTO refresh_tokens (id, user_id, token, expires_at) VALUES (?, ?, ?, ?)",
+        [id, userId, token, expiresAt]
+    );
+    return result;
+}
+
+export const findRefreshTokenRepository = async (token) => {
+    const [rows] = await pool.query(
+        "SELECT * FROM refresh_tokens WHERE token = ?",
+        [token]
+    );
+    return rows[0];
+}
+
+export const deleteRefreshTokenRepository = async (token) => {
+    const [result] = await pool.query(
+        "DELETE FROM refresh_tokens WHERE token = ?",
+        [token]
+    );
+    return result;
+}
