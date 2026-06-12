@@ -4,6 +4,7 @@ import { HiOutlineMail, HiOutlineLockClosed, HiOutlineEye, HiOutlineEyeOff } fro
 import { FcGoogle } from 'react-icons/fc';
 import { HiOutlineSparkles, HiOutlineGlobe, HiOutlineUserGroup } from 'react-icons/hi';
 import { authAPI } from '../api/auth';
+import { setAuth } from '../utils/auth';
 import './Auth.css';
 
 function Login() {
@@ -25,18 +26,8 @@ function Login() {
     try {
       const response = await authAPI.login({ email, password });
 
-      // Store token
-      if (rememberMe) {
-        localStorage.setItem('token', response.token);
-      } else {
-        sessionStorage.setItem('token', response.token);
-      }
-
-      // Store user data
-      localStorage.setItem('user', JSON.stringify(response.data));
-
-      // Navigate to dashboard (or home)
-      navigate('/');
+      setAuth(response.token, response.data, rememberMe);
+      navigate('/dashboard');
     } catch (err) {
       setError(err.message || 'Login failed. Please check your credentials.');
     } finally {
