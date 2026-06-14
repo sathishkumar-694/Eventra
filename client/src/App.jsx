@@ -1,31 +1,47 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import Login from './components/Login';
 import Register from './components/Register';
+import Navbar from './components/Navbar';
+import LandingPage from './pages/LandingPage';
 import Dashboard from './pages/Dashboard';
 import ProtectedRoute from './routes/ProtectedRoute';
 import './App.css';
 
-function App() {
-  return (
-    <Router>
-      <Routes>
-        <Route path="/login"    element={<Login />} />
-        <Route path="/register" element={<Register />} />
+const AUTH_ROUTES = ['/login', '/register'];
 
-        <Route
-          path="/dashboard"
-          element={
-            <ProtectedRoute>
-              <Dashboard />
-            </ProtectedRoute>
-          }
-        />
+const AppContent = () => {
+    const location = useLocation();
+    const hideNavbar = AUTH_ROUTES.includes(location.pathname);
 
-        <Route path="/"  element={<Navigate to="/dashboard" replace />} />
-        <Route path="*"  element={<Navigate to="/dashboard" replace />} />
-      </Routes>
-    </Router>
-  );
-}
+    return (
+        <>
+            {!hideNavbar && <Navbar />}
+            <Routes>
+                <Route path="/"          element={<LandingPage />} />
+                <Route path="/login"     element={<Login />} />
+                <Route path="/register"  element={<Register />} />
+
+                <Route
+                    path="/dashboard"
+                    element={
+                        <ProtectedRoute>
+                            <Dashboard />
+                        </ProtectedRoute>
+                    }
+                />
+
+                <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+        </>
+    );
+};
+
+const App = () => {
+    return (
+        <Router>
+            <AppContent />
+        </Router>
+    );
+};
 
 export default App;
