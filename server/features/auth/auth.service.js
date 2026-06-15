@@ -1,4 +1,4 @@
-import { createUser, deleteRefreshTokenRepository, findRefreshTokenRepository, findUserById, saveRefreshTokenRepository, userExists } from "./auth.repository.js";
+import { createUser, deleteRefreshTokenRepository, findRefreshTokenRepository, findUserById, saveRefreshTokenRepository, userExists, usernameExists } from "./auth.repository.js";
 import ApiError from "../../utils/ApiError.js";
 import { comparePassword, hashPassword } from "../../utils/bcrypt.js";
 import { generateAccessToken, generateRefreshToken, verifyRefreshToken } from "../../utils/jwt.js";
@@ -10,6 +10,10 @@ export const registerService = async(username, email, password) => {
     const user = await userExists(email);
     if(user.length > 0)
         throw new ApiError(400, "User already exists");
+
+    const takenUsername = await usernameExists(username);
+    if(takenUsername.length > 0)
+        throw new ApiError(400, "Username is already taken");
 
     const hashedPass = await hashPassword(password);
     const userId = randomUUID();
