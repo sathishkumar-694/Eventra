@@ -11,9 +11,9 @@ import {
 import ApiError from "../../utils/ApiError.js";
 import { randomUUID } from "crypto";
 
-export const getAllEventsService = async () => {
-  const response = await getAllEventsRepository();  
-  return response;
+export const getAllEventsService = async (filters) => {
+    const response = await getAllEventsRepository(filters);
+    return response;
 };
 
 export const getOrganizerEventsService = async (userId) => {

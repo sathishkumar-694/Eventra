@@ -8,16 +8,18 @@ import {
 } from "./event.service.js";
 
 export const getAllEventsController = async (req, res, next) => {
-  try {
-    const response = await getAllEventsService();
-
-    return res.status(200).json({
-      success: true,
-      data: response,
-    });
-  } catch (err) {
-    next(err);
-  }
+    try {
+        const response = await getAllEventsService(req.query);
+        return res.status(200).json({
+            success: true,
+            page: req.query.page,
+            limit: req.query.limit,
+            count: response.length,
+            data: response,
+        });
+    } catch (err) {
+        next(err);
+    }
 };
 
 export const getOrganizerEventsController = async (req, res, next) => {

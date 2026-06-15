@@ -1,8 +1,35 @@
 import { pool } from "../../database/db.js";
 
-export const getAllEventsRepository = async () => {
-  const [rows] = await pool.query("SELECT * FROM events where approval_status = ?" , ["APPROVED"]);
-  return rows;
+export const getAllEventsRepository = async ({ search, location, minPrice, maxPrice, date, page, limit, sortBy }) => {
+    let query = "SELECT * FROM events WHERE approval_status = 'APPROVED'";
+    const params = [];
+
+    if (search) {
+        query += " AND title LIKE ?";
+        params.push(`%${search}%`);
+    }
+    if (location) {
+        query += " AND location LIKE ?";
+        params.push(`%${location}%`);
+    }
+    if (minPrice !== undefined) {
+        query += " AND price >= ?";
+        params.push(minPrice);
+    }
+    if (maxPrice !== undefined) {
+        query += " AND price <= ?";
+        params.push(maxPrice);
+    }
+    if (date) {
+        query += " AND DATE(event_date) = ?";
+        params.push(date);
+    }
+
+    query += ` ORDER BY ${sortBy} DESC LIMIT ? OFFSET ?`;
+    params.push(limit, (page - 1) * limit);
+
+    const [rows] = await pool.query(query, params);
+    return rows;
 };
 
 export const getEventByIdRepository = async (id) => {

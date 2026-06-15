@@ -21,26 +21,29 @@ export const createEventSchema = z.object({
 
   event_date: z.coerce
     .date()
-    .refine(
-      (date) => date > new Date(),
-      "Event date must be in the future"
-    ),
+    .refine((date) => date > new Date(), "Event date must be in the future"),
 
-  price: z
-    .number()
-    .min(0, "Price cannot be negative"),
+  price: z.number().min(0, "Price cannot be negative"),
 
   total_seats: z
     .number()
     .int("Total seats must be an integer")
-    .positive("Total seats must be greater than 0")
+    .positive("Total seats must be greater than 0"),
 });
 
 export const updateEventSchema = createEventSchema
   .partial()
-  .refine(
-    (data) => Object.keys(data).length > 0,
-    {
-      message: "At least one field is required for update"
-    }
-  );
+  .refine((data) => Object.keys(data).length > 0, {
+    message: "At least one field is required for update",
+  });
+
+export const getEventsQuerySchema = z.object({
+  search: z.string().trim().optional(),
+  location: z.string().trim().optional(),
+  minPrice: z.coerce.number().min(0).optional(),
+  maxPrice: z.coerce.number().min(0).optional(),
+  date: z.string().optional(),
+  page: z.coerce.number().int().min(1).default(1),
+  limit: z.coerce.number().int().min(1).max(50).default(10),
+  sortBy: z.enum(["event_date", "price", "created_at"]).default("created_at"),
+});
