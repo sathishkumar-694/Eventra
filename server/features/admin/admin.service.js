@@ -10,6 +10,7 @@ import {
   rejectEventsRepository,
   updateRoleRequestStatusRepository,
   updateUserRoleRepository,
+  getStatsRepository,
 } from "./admin.repository.js";
 import { getRoleRequestByIdRepository } from "../role/role.repostiory.js";
 
@@ -118,4 +119,8 @@ export const revokeRoleRequestService = async (requestId, adminId) => {
     throw new ApiError(500, "Failed to downgrade user role");
 
   return { requestId, userId: request.user_id, role: "USER" };
+};
+
+export const getStatsService = async () => {
+  return await getStatsRepository();
 };

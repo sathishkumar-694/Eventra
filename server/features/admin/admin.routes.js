@@ -13,6 +13,7 @@ import {
   rejectEventsController,
   rejectRoleRequestController,
   revokeRoleRequestController,
+  getStatsController,
 } from "./admin.controller.js";
 import { validate } from "../../middleware/validate.middleware.js";
 import { rejectEventSchema } from "./admin.validate.js";
@@ -78,5 +79,7 @@ adminRoutes.patch(
   authorize("ADMIN"),
   revokeRoleRequestController,
 );
+
+adminRoutes.get("/stats", getMe, authorize("ADMIN"), getStatsController);
 
 export default adminRoutes;

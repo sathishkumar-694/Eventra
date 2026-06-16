@@ -9,6 +9,7 @@ import {
   rejectEventsService,
   rejectRoleRequestService,
   revokeRoleRequestService,
+  getStatsService,
 } from "./admin.service.js";
 
 export const getAllEventsController = async (req, res, next) => {
@@ -138,6 +139,15 @@ export const revokeRoleRequestController = async (req, res, next) => {
       message: "Organizer role revoked. User downgraded to USER.",
       data,
     });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getStatsController = async (req, res, next) => {
+  try {
+    const data = await getStatsService();
+    return res.status(200).json({ success: true, data });
   } catch (error) {
     next(error);
   }
