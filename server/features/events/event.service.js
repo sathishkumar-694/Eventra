@@ -12,8 +12,8 @@ import ApiError from "../../utils/ApiError.js";
 import { randomUUID } from "crypto";
 
 export const getAllEventsService = async (filters) => {
-    const response = await getAllEventsRepository(filters);
-    return response;
+  const response = await getAllEventsRepository(filters);
+  return response;
 };
 
 export const getOrganizerEventsService = async (userId) => {
@@ -61,11 +61,10 @@ export const updateEventService = async (eventId, eventData, userId) => {
     throw new ApiError(403, "You are not authorized to update this event");
   }
 
-  if(eventData.title != null)
-  {
+  if (eventData.title != null) {
     const check = await getEventByNameRepository(eventData.title);
-    if(check.length > 0 && check[0].id !== eventId )
-      throw new ApiError(400 , "Event with the name already exists")
+    if (check.length > 0 && check[0].id !== eventId)
+      throw new ApiError(400, "Event with the name already exists");
   }
 
   const result = await updateEventRepository(eventId, eventData);
