@@ -11,6 +11,7 @@ import eventRoutes from "./features/events/event.routes.js";
 import adminRoutes from "./features/admin/admin.routes.js";
 import bookingRoutes from "./features/bookings/booking.routes.js";
 import roleRoutes from "./features/role/role.routes.js";
+import reviewRoutes from "./features/reviews/review.routes.js";
 dotenv.config();
 
 const PORT = process.env.PORT;
@@ -40,6 +41,7 @@ app.use("/api/events", eventRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/bookings", bookingRoutes);
 app.use("/api/roles", roleRoutes);
+app.use("/api/reviews", reviewRoutes);
 
 app.get("/health", async (req, res) => {
   try {
