@@ -9,9 +9,9 @@ import {
 } from "./bookings.repository.js";
 import {
   createSeatHoldRepository,
-  getActiveHoldByUserAndEventRepository,
-  getHoldByIdRepository,
-  deleteHoldRepository,
+  getSeatHoldByUserAndEventRepository,
+  getSeatHoldByIdRepository,
+  deleteSeatHoldRepository,
 } from "./seat-hold.repository.js";
 
 const HOLD_DURATION_MS = 5 * 60 * 1000;
@@ -23,7 +23,7 @@ export const createSeatHoldService = async (userId, eventId, seatsHeld) => {
 
   const event = events[0];
 
-  const existing = await getActiveHoldByUserAndEventRepository(userId, eventId);
+  const existing = await getSeatHoldByUserAndEventRepository(userId, eventId);
   if (existing.length > 0)
     throw new ApiError(
       409,
@@ -60,24 +60,24 @@ export const createSeatHoldService = async (userId, eventId, seatsHeld) => {
   }
 };
 
-export const releaseSeatHoldService = async (holdId, userId) => {
-  const holds = await getHoldByIdRepository(holdId);
+export const cancelSeatHoldService = async (holdId, userId) => {
+  const holds = await getSeatHoldByIdRepository(holdId);
   if (holds.length === 0) throw new ApiError(404, "Hold not found");
 
   const hold = holds[0];
 
   if (hold.user_id !== userId)
-    throw new ApiError(403, "You are not authorized to release this hold");
+    throw new ApiError(403, "You are not authorized to cancel this hold");
 
   const conn = await pool.getConnection();
   try {
     await conn.beginTransaction();
 
-    await deleteHoldRepository(conn, holdId);
+    await deleteSeatHoldRepository(conn, holdId);
     await incrementSeats(conn, hold.event_id, hold.seats_held);
 
     await conn.commit();
-    return { released: true };
+    return { cancelled: true };
   } catch (err) {
     await conn.rollback();
     throw err;
@@ -86,8 +86,8 @@ export const releaseSeatHoldService = async (holdId, userId) => {
   }
 };
 
-export const getSeatHoldStatusService = async (userId, eventId) => {
-  const holds = await getActiveHoldByUserAndEventRepository(userId, eventId);
+export const getSeatHoldService = async (userId, eventId) => {
+  const holds = await getSeatHoldByUserAndEventRepository(userId, eventId);
   if (holds.length === 0) return null;
 
   const hold = holds[0];
@@ -100,8 +100,8 @@ export const getSeatHoldStatusService = async (userId, eventId) => {
   };
 };
 
-export const convertHoldToBookingService = async (conn, holdId, bookingId) => {
-  const holds = await getHoldByIdRepository(holdId);
+export const convertSeatHoldToBookingService = async (conn, holdId, bookingId) => {
+  const holds = await getSeatHoldByIdRepository(holdId);
   if (holds.length === 0)
     throw new ApiError(404, "Seat hold not found or already expired");
 
@@ -110,7 +110,7 @@ export const convertHoldToBookingService = async (conn, holdId, bookingId) => {
   if (new Date(hold.expires_at) < new Date())
     throw new ApiError(410, "Seat hold has expired");
 
-  await deleteHoldRepository(conn, holdId);
+  await deleteSeatHoldRepository(conn, holdId);
 
   const result = await createBookingRepository(
     conn,

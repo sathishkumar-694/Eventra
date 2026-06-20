@@ -16,10 +16,7 @@ export const createSeatHoldRepository = async (
   return result;
 };
 
-export const getActiveHoldByUserAndEventRepository = async (
-  userId,
-  eventId,
-) => {
+export const getSeatHoldByUserAndEventRepository = async (userId, eventId) => {
   const [rows] = await pool.execute(
     `SELECT * FROM seat_holds
      WHERE user_id = ? AND event_id = ? AND expires_at > NOW()
@@ -29,19 +26,23 @@ export const getActiveHoldByUserAndEventRepository = async (
   return rows;
 };
 
-export const getHoldByIdRepository = async (holdId) => {
-  const [rows] = await pool.execute("SELECT * FROM seat_holds WHERE id = ?", [
-    holdId]);
+export const getSeatHoldByIdRepository = async (holdId) => {
+  const [rows] = await pool.execute(
+    "SELECT * FROM seat_holds WHERE id = ?",
+    [holdId],
+  );
   return rows;
 };
 
-export const deleteHoldRepository = async (conn, holdId) => {
-  const [result] = await conn.execute("DELETE FROM seat_holds WHERE id = ?", [
-    holdId]);
+export const deleteSeatHoldRepository = async (conn, holdId) => {
+  const [result] = await conn.execute(
+    "DELETE FROM seat_holds WHERE id = ?",
+    [holdId],
+  );
   return result;
 };
 
-export const getAndDeleteExpiredHoldsRepository = async () => {
+export const deleteExpiredSeatHoldsRepository = async () => {
   const conn = await pool.getConnection();
   try {
     await conn.beginTransaction();

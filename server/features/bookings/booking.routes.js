@@ -6,8 +6,8 @@ import {
 } from "./bookings.controller.js";
 import {
   createSeatHoldController,
-  releaseSeatHoldController,
-  getSeatHoldStatusController,
+  cancelSeatHoldController,
+  getSeatHoldController,
 } from "./seat-hold.controller.js";
 import { getMe } from "../../middleware/auth.middleware.js";
 import { validate } from "../../middleware/validate.middleware.js";
@@ -20,8 +20,8 @@ bookingRoutes.post("/", getMe, validate(createBookingSchema), createBookingContr
 bookingRoutes.get("/", getMe, getUserBookingsController);
 bookingRoutes.patch("/:id/cancel", getMe, cancelBookingController);
 
-bookingRoutes.get("/hold/status", getMe, getSeatHoldStatusController);
+bookingRoutes.get("/hold/status", getMe, getSeatHoldController);
 bookingRoutes.post("/hold", getMe, validate(createSeatHoldSchema), createSeatHoldController);
-bookingRoutes.delete("/hold/:id", getMe, releaseSeatHoldController);
+bookingRoutes.delete("/hold/:id", getMe, cancelSeatHoldController);
 
 export default bookingRoutes;
