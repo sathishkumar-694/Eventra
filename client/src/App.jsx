@@ -4,6 +4,7 @@ import Register from './components/Register';
 import Navbar from './components/Navbar';
 import LandingPage from './pages/LandingPage';
 import Dashboard from './pages/Dashboard';
+import EventsPage from './pages/EventsPage';
 import ProtectedRoute from './routes/ProtectedRoute';
 import './App.css';
 
@@ -20,6 +21,7 @@ const AppContent = () => {
                 <Route path="/"          element={<LandingPage />} />
                 <Route path="/login"     element={<Login />} />
                 <Route path="/register"  element={<Register />} />
+                <Route path="/events"    element={<EventsPage />} />
 
                 <Route
                     path="/dashboard"
