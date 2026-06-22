@@ -3,7 +3,7 @@ import ApiError from "../../utils/ApiError.js";
 import {
   createRoleRequestRepository,
   getRoleRequestByUserRepository,
-} from "./role.repostiory.js";
+} from "./role.repository.js";
 
 export const createRoleRequestService = async (userId, reason) => {
   const existing = await getRoleRequestByUserRepository(userId);
