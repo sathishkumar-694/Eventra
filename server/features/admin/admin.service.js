@@ -12,7 +12,7 @@ import {
   updateUserRoleRepository,
   getStatsRepository,
 } from "./admin.repository.js";
-import { getRoleRequestByIdRepository } from "../role/role.repostiory.js";
+import { getRoleRequestByIdRepository } from "../role/role.repository.js";
 
 export const getAllEventsService = async () => {
   const response = await getAllEventsRepository();

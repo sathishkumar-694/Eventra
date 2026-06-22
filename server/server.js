@@ -12,6 +12,7 @@ import adminRoutes from "./features/admin/admin.routes.js";
 import bookingRoutes from "./features/bookings/booking.routes.js";
 import roleRoutes from "./features/role/role.routes.js";
 import reviewRoutes from "./features/reviews/review.routes.js";
+import waitlistRoutes from "./features/waitlist/waitlist.routes.js";
 dotenv.config();
 
 const PORT = process.env.PORT;
@@ -23,6 +24,7 @@ const authLimiter = rateLimit({
     success: false,
     message: "Too many requests, please try again later",
   },
+  skip: () => process.env.NODE_ENV === "test",
 });
 
 const app = express();
@@ -42,6 +44,7 @@ app.use("/api/admin", adminRoutes);
 app.use("/api/bookings", bookingRoutes);
 app.use("/api/roles", roleRoutes);
 app.use("/api/reviews", reviewRoutes);
+app.use("/api/waitlist", waitlistRoutes);
 
 app.get("/health", async (req, res) => {
   try {

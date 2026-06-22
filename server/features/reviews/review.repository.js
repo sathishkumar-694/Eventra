@@ -6,7 +6,7 @@ export const getConfirmedBookingByUserAndEventRepository = async (userId, eventI
      JOIN events e ON e.id = b.event_id
      WHERE b.user_id = ?
        AND b.event_id = ?
-       AND b.booking_status = 'CONFIRMED'
+       AND b.booking_status IN ('CONFIRMED', 'BOOKED')
        AND e.event_date < NOW()
      LIMIT 1`,
     [userId, eventId],

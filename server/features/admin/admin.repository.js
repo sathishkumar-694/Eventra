@@ -88,17 +88,17 @@ export const updateUserRoleRepository = async (userId, role) => {
 export const getStatsRepository = async () => {
   const [[{ totalUsers }]] = await pool.query("SELECT COUNT(*) AS totalUsers FROM users");
   const [[{ totalEvents }]] = await pool.query("SELECT COUNT(*) AS totalEvents FROM events");
-  const [[{ totalBookings }]] = await pool.query("SELECT COUNT(*) AS totalBookings FROM bookings WHERE booking_status = 'CONFIRMED'");
+  const [[{ totalBookings }]] = await pool.query("SELECT COUNT(*) AS totalBookings FROM bookings WHERE booking_status IN ('CONFIRMED', 'BOOKED')");
   const [[{ totalRevenue }]] = await pool.query(
     `SELECT COALESCE(SUM(e.price * b.ticket_count), 0) AS totalRevenue
      FROM bookings b
      JOIN events e ON e.id = b.event_id
-     WHERE b.booking_status = 'CONFIRMED'`
+     WHERE b.booking_status IN ('CONFIRMED', 'BOOKED')`
   );
   const [topEvents] = await pool.query(
     `SELECT e.id, e.title, COUNT(b.id) AS bookingCount
      FROM events e
-     LEFT JOIN bookings b ON b.event_id = e.id AND b.booking_status = 'CONFIRMED'
+     LEFT JOIN bookings b ON b.event_id = e.id AND b.booking_status IN ('CONFIRMED', 'BOOKED')
      GROUP BY e.id, e.title
      ORDER BY bookingCount DESC
      LIMIT 5`

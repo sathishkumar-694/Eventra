@@ -22,7 +22,6 @@ function Register() {
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
-    // Clear error when user starts typing
     if (error) setError('');
   };
 
@@ -30,7 +29,6 @@ function Register() {
     e.preventDefault();
     setError('');
 
-    // Client-side validation
     if (formData.password !== formData.confirmPassword) {
       setError('Passwords do not match');
       return;
@@ -50,14 +48,11 @@ function Register() {
         password: formData.password,
       });
 
-      // Navigate to login on success
       navigate('/login', {
         state: { message: 'Account created successfully! Please sign in.' }
       });
     } catch (err) {
-      // Handle validation errors from backend
       if (err.errors) {
-        // Zod validation errors come as formatted object
         const errorMessages = [];
         for (const [field, fieldError] of Object.entries(err.errors)) {
           if (field === '_errors') continue;
@@ -74,12 +69,9 @@ function Register() {
     }
   };
 
-  const handleGoogleSignup = () => {
-    // TODO: Implement Google OAuth
-    console.log('Google signup clicked');
-  };
+  const handleGoogleSignup = () => {};
 
-  // Password strength calculator
+
   const getPasswordStrength = (password) => {
     if (!password) return { level: 0, label: '' };
     let score = 0;
@@ -97,7 +89,6 @@ function Register() {
 
   return (
     <div className="auth-page">
-      {/* Left Brand Panel */}
       <div className="auth-brand-panel">
         <div className="floating-shape" />
         <div className="floating-shape" />
@@ -125,7 +116,6 @@ function Register() {
         </div>
       </div>
 
-      {/* Right Form Panel */}
       <div className="auth-form-panel">
         <div className="auth-form-container">
           <div className="auth-form-header">
@@ -134,7 +124,6 @@ function Register() {
             <p className="auth-form-subtitle">Start your journey with Eventra today</p>
           </div>
 
-          {/* Error Message */}
           {error && (
             <div className="form-error">
               <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
@@ -145,7 +134,6 @@ function Register() {
           )}
 
           <form className="auth-form" onSubmit={handleSubmit}>
-            {/* Username */}
             <div className="form-group">
               <label className="form-label" htmlFor="register-username">Username</label>
               <div className="form-input-wrapper">
@@ -166,7 +154,6 @@ function Register() {
               </div>
             </div>
 
-            {/* Email */}
             <div className="form-group">
               <label className="form-label" htmlFor="register-email">Email</label>
               <div className="form-input-wrapper">
@@ -186,7 +173,6 @@ function Register() {
               </div>
             </div>
 
-            {/* Password */}
             <div className="form-group">
               <label className="form-label" htmlFor="register-password">Password</label>
               <div className="form-input-wrapper">
@@ -212,7 +198,6 @@ function Register() {
                   {showPassword ? <HiOutlineEyeOff size={20} /> : <HiOutlineEye size={20} />}
                 </button>
               </div>
-              {/* Password strength indicator */}
               {formData.password && (
                 <>
                   <div className="password-strength">
@@ -228,7 +213,6 @@ function Register() {
               )}
             </div>
 
-            {/* Confirm Password */}
             <div className="form-group">
               <label className="form-label" htmlFor="register-confirmPassword">Confirm Password</label>
               <div className="form-input-wrapper">
@@ -256,7 +240,6 @@ function Register() {
               </div>
             </div>
 
-            {/* Terms */}
             <label className="form-checkbox-label">
               <input
                 type="checkbox"
@@ -268,7 +251,6 @@ function Register() {
               I agree to the <Link to="/terms" className="form-link" style={{ marginLeft: '4px', marginRight: '4px' }}>Terms of Service</Link> and <Link to="/privacy" className="form-link" style={{ marginLeft: '4px' }}>Privacy Policy</Link>
             </label>
 
-            {/* Submit */}
             <button
               type="submit"
               className="auth-submit-btn"
@@ -286,14 +268,12 @@ function Register() {
             </button>
           </form>
 
-          {/* Divider */}
           <div className="auth-divider">
             <div className="auth-divider-line" />
             <span className="auth-divider-text">or sign up with</span>
             <div className="auth-divider-line" />
           </div>
 
-          {/* Social */}
           <div className="auth-social-buttons">
             <button
               type="button"
@@ -306,7 +286,6 @@ function Register() {
             </button>
           </div>
 
-          {/* Footer */}
           <div className="auth-footer">
             Already have an account?
             <Link to="/login">Sign In</Link>

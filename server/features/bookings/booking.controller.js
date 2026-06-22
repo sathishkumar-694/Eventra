@@ -22,9 +22,9 @@ export const getUserBookingsController = async (req, res, next) => {
 export const createBookingController = async (req, res, next) => {
   try {
     const userId = req.user.id;
-    const { eventId, seats_booked } = req.body;
+    const { eventId, seats_booked, holdId } = req.body;
 
-    const data = await createBookingService(userId, eventId, seats_booked);
+    const data = await createBookingService(userId, eventId, seats_booked, holdId);
 
     return res.status(201).json({
       success: true,

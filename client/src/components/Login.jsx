@@ -35,14 +35,11 @@ function Login() {
     }
   };
 
-  const handleGoogleLogin = () => {
-    // TODO: Implement Google OAuth
-    console.log('Google login clicked');
-  };
+  const handleGoogleLogin = () => {};
+
 
   return (
     <div className="auth-page">
-      {/* Left Brand Panel */}
       <div className="auth-brand-panel">
         <div className="floating-shape" />
         <div className="floating-shape" />
@@ -70,7 +67,6 @@ function Login() {
         </div>
       </div>
 
-      {/* Right Form Panel */}
       <div className="auth-form-panel">
         <div className="auth-form-container">
           <div className="auth-form-header">
@@ -79,7 +75,6 @@ function Login() {
             <p className="auth-form-subtitle">Sign in to your account to continue</p>
           </div>
 
-          {/* Success Message (from registration) */}
           {successMessage && (
             <div className="form-success">
               <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
@@ -89,7 +84,6 @@ function Login() {
             </div>
           )}
 
-          {/* Error Message */}
           {error && (
             <div className="form-error">
               <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
@@ -100,7 +94,6 @@ function Login() {
           )}
 
           <form className="auth-form" onSubmit={handleSubmit}>
-            {/* Email */}
             <div className="form-group">
               <label className="form-label" htmlFor="login-email">Email</label>
               <div className="form-input-wrapper">
@@ -119,7 +112,6 @@ function Login() {
               </div>
             </div>
 
-            {/* Password */}
             <div className="form-group">
               <label className="form-label" htmlFor="login-password">Password</label>
               <div className="form-input-wrapper">
@@ -146,7 +138,6 @@ function Login() {
               </div>
             </div>
 
-            {/* Remember + Forgot */}
             <div className="form-row">
               <label className="form-checkbox-label">
                 <input
@@ -162,7 +153,6 @@ function Login() {
               </Link>
             </div>
 
-            {/* Submit */}
             <button
               type="submit"
               className="auth-submit-btn"
@@ -180,14 +170,12 @@ function Login() {
             </button>
           </form>
 
-          {/* Divider */}
           <div className="auth-divider">
             <div className="auth-divider-line" />
             <span className="auth-divider-text">or continue with</span>
             <div className="auth-divider-line" />
           </div>
 
-          {/* Social */}
           <div className="auth-social-buttons">
             <button
               type="button"
@@ -200,7 +188,6 @@ function Login() {
             </button>
           </div>
 
-          {/* Footer */}
           <div className="auth-footer">
             Don't have an account?
             <Link to="/register">Sign Up</Link>

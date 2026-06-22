@@ -6,17 +6,20 @@ import {
   createBookingRepository,
   decrementSeats,
   incrementSeats,
-} from "./bookings.repository.js";
+} from "./booking.repository.js";
 import {
   createSeatHoldRepository,
   getSeatHoldByUserAndEventRepository,
   getSeatHoldByIdRepository,
   deleteSeatHoldRepository,
+  deleteExpiredSeatHoldsRepository,
 } from "./seat-hold.repository.js";
 
 const HOLD_DURATION_MS = 5 * 60 * 1000;
 
 export const createSeatHoldService = async (userId, eventId, seatsHeld) => {
+  await deleteExpiredSeatHoldsRepository();
+
   const events = await getEventByIdRepository(eventId);
   if (events.length === 0)
     throw new ApiError(404, "Event not found or not approved");

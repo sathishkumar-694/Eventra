@@ -3,7 +3,7 @@ import {
   createBookingController,
   getUserBookingsController,
   cancelBookingController,
-} from "./bookings.controller.js";
+} from "./booking.controller.js";
 import {
   createSeatHoldController,
   cancelSeatHoldController,
