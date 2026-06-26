@@ -13,6 +13,9 @@ import bookingRoutes from "./features/bookings/booking.routes.js";
 import roleRoutes from "./features/role/role.routes.js";
 import reviewRoutes from "./features/reviews/review.routes.js";
 import waitlistRoutes from "./features/waitlist/waitlist.routes.js";
+import "./queues/email.queue.js";
+import "./queues/seat-hold.queue.js";
+import "./queues/waitlist.queue.js";
 dotenv.config();
 
 const PORT = process.env.PORT;

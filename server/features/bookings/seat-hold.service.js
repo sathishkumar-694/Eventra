@@ -14,6 +14,7 @@ import {
   deleteSeatHoldRepository,
   deleteExpiredSeatHoldsRepository,
 } from "./seat-hold.repository.js";
+import { seatHoldQueue } from "../../queues/seat-hold.queue.js";
 
 const HOLD_DURATION_MS = 5 * 60 * 1000;
 
@@ -54,6 +55,13 @@ export const createSeatHoldService = async (userId, eventId, seatsHeld) => {
     );
 
     await conn.commit();
+
+    seatHoldQueue.add(
+      `seat-hold-expiry-${holdId}`,
+      { holdId },
+      { delay: HOLD_DURATION_MS }
+    ).catch(err => console.error(`Failed to enqueue delayed seat hold expiry: ${err.message}`));
+
     return { holdId, eventId: event.id, seatsHeld, expiresAt };
   } catch (err) {
     await conn.rollback();

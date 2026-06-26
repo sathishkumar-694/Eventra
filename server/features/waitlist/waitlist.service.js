@@ -66,12 +66,47 @@ export const deleteWaitlistService = async (userId, eventId) => {
   return { left: true };
 };
 
+import { findUserById } from "../auth/auth.repository.js";
+import { emailQueue } from "../../queues/email.queue.js";
+import { waitlistQueue } from "../../queues/waitlist.queue.js";
+
 export const notifyWaitlistService = async (eventId) => {
   const waiting = await getFirstWaitlistRepository(eventId);
   if (waiting.length === 0) return null;
 
   const next = waiting[0];
   await updateWaitlistStatusRepository(next.id, "NOTIFIED");
+
+  try {
+    const user = await findUserById(next.user_id);
+    const events = await getEventByIdRepository(eventId);
+    const event = events[0];
+
+    if (user && event) {
+      emailQueue.add(`waitlist-notify-${next.id}`, {
+        type: "waitlist-notify",
+        to: user.email,
+        payload: {
+          username: user.username,
+          eventTitle: event.title,
+        },
+      }).catch(err => console.error(`Failed to enqueue waitlist email: ${err.message}`));
+
+      waitlistQueue.add(
+        `waitlist-timeout-${next.id}`,
+        {
+          waitlistId: next.id,
+          eventId,
+          userId: next.user_id,
+        },
+        {
+          delay: 30 * 60 * 1000,
+        }
+      ).catch(err => console.error(`Failed to enqueue waitlist timeout job: ${err.message}`));
+    }
+  } catch (err) {
+    console.error(`Failed to fetch user/event for waitlist promotion: ${err.message}`);
+  }
 
   return { notifiedUserId: next.user_id, waitlistId: next.id };
 };

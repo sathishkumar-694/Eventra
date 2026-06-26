@@ -12,6 +12,9 @@ import {
 } from "./booking.repository.js";
 import { notifyWaitlistService } from "../waitlist/waitlist.service.js";
 import { getSeatHoldByIdRepository, deleteSeatHoldRepository } from "./seat-hold.repository.js";
+import { findUserById } from "../auth/auth.repository.js";
+import { deleteWaitlistRepository } from "../waitlist/waitlist.repository.js";
+import { emailQueue } from "../../queues/email.queue.js";
 
 export const createBookingService = async (userId, eventId, seatsBooked, holdId = null) => {
   const conn = await pool.getConnection();
@@ -61,7 +64,37 @@ export const createBookingService = async (userId, eventId, seatsBooked, holdId 
     if (result.affectedRows === 0)
       throw new ApiError(500, "Failed to create booking");
 
+    await deleteWaitlistRepository(userId, targetEventId);
+
+    let eventTitle = "Event";
+    let eventPrice = 0;
+    try {
+      const events = await getEventByIdRepository(targetEventId);
+      if (events.length > 0) {
+        eventTitle = events[0].title;
+        eventPrice = events[0].price;
+      }
+    } catch (err) {}
+
     await conn.commit();
+
+    findUserById(userId)
+      .then((user) => {
+        if (user) {
+          emailQueue.add(`booking-confirm-${bookingId}`, {
+            type: "booking-confirmation",
+            to: user.email,
+            payload: {
+              username: user.username,
+              eventTitle,
+              seats: targetSeatsBooked,
+              price: eventPrice * targetSeatsBooked,
+            },
+          }).catch(err => console.error(`Failed to enqueue booking confirmation email: ${err.message}`));
+        }
+      })
+      .catch(err => console.error(`Failed to fetch user: ${err.message}`));
+
     return { id: bookingId, affectedRows: result.affectedRows };
   } catch (error) {
     await conn.rollback();
@@ -96,7 +129,31 @@ export const cancelBookingService = async (bookingId, userId) => {
 
     await incrementSeats(conn, booking.event_id, booking.ticket_count);
 
+    let eventTitle = "Event";
+    try {
+      const events = await getEventByIdRepository(booking.event_id);
+      if (events.length > 0) {
+        eventTitle = events[0].title;
+      }
+    } catch (err) {}
+
     await conn.commit();
+
+    findUserById(userId)
+      .then((user) => {
+        if (user) {
+          emailQueue.add(`booking-cancel-${bookingId}`, {
+            type: "booking-cancellation",
+            to: user.email,
+            payload: {
+              username: user.username,
+              eventTitle,
+              seats: booking.ticket_count,
+            },
+          }).catch(err => console.error(`Failed to enqueue booking cancellation email: ${err.message}`));
+        }
+      })
+      .catch(err => console.error(`Failed to fetch user: ${err.message}`));
 
     await notifyWaitlistService(booking.event_id);
 

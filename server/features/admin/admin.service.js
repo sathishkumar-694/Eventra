@@ -13,6 +13,8 @@ import {
   getStatsRepository,
 } from "./admin.repository.js";
 import { getRoleRequestByIdRepository } from "../role/role.repository.js";
+import { findUserById } from "../auth/auth.repository.js";
+import { emailQueue } from "../../queues/email.queue.js";
 
 export const getAllEventsService = async () => {
   const response = await getAllEventsRepository();
@@ -45,6 +47,23 @@ export const approveEventsService = async (id, adminId) => {
   if (approveEvent.affectedRows == 0)
     throw new ApiError(500, "Unable to approve event");
 
+  findUserById(response[0].organizer_id)
+    .then((organizer) => {
+      if (organizer) {
+        emailQueue.add(`event-approve-${id}`, {
+          type: "event-status",
+          to: organizer.email,
+          payload: {
+            organizerName: organizer.username,
+            eventTitle: response[0].title,
+            status: "APPROVED",
+            reason: "",
+          },
+        }).catch(err => console.error(`Failed to enqueue event approval email: ${err.message}`));
+      }
+    })
+    .catch((err) => console.error(`Failed to fetch organizer: ${err.message}`));
+
   return approveEvent;
 };
 
@@ -58,6 +77,23 @@ export const rejectEventsService = async (id, reason, adminId) => {
   const rejectEvent = await rejectEventsRepository(id, reason, adminId);
   if (rejectEvent.affectedRows == 0)
     throw new ApiError(500, "Unable to reject event");
+
+  findUserById(response[0].organizer_id)
+    .then((organizer) => {
+      if (organizer) {
+        emailQueue.add(`event-reject-${id}`, {
+          type: "event-status",
+          to: organizer.email,
+          payload: {
+            organizerName: organizer.username,
+            eventTitle: response[0].title,
+            status: "REJECTED",
+            reason,
+          },
+        }).catch(err => console.error(`Failed to enqueue event rejection email: ${err.message}`));
+      }
+    })
+    .catch((err) => console.error(`Failed to fetch organizer: ${err.message}`));
 
   return rejectEvent;
 };
@@ -82,6 +118,22 @@ export const approveRoleRequestService = async (requestId, adminId) => {
   if (roleResult.affectedRows === 0)
     throw new ApiError(500, "Failed to update user role");
 
+  findUserById(request.user_id)
+    .then((user) => {
+      if (user) {
+        emailQueue.add(`role-approve-${requestId}`, {
+          type: "role-status",
+          to: user.email,
+          payload: {
+            username: user.username,
+            status: "APPROVED",
+            reason: "",
+          },
+        }).catch(err => console.error(`Failed to enqueue role approval email: ${err.message}`));
+      }
+    })
+    .catch((err) => console.error(`Failed to fetch user: ${err.message}`));
+
   return { requestId, userId: request.user_id, newRole: "ORGANIZER" };
 };
 
@@ -97,6 +149,22 @@ export const rejectRoleRequestService = async (requestId, adminId, reason) => {
   const statusResult = await updateRoleRequestStatusRepository(requestId, "REJECTED", adminId, reason);
   if (statusResult.affectedRows === 0)
     throw new ApiError(500, "Failed to update role request status");
+
+  findUserById(request.user_id)
+    .then((user) => {
+      if (user) {
+        emailQueue.add(`role-reject-${requestId}`, {
+          type: "role-status",
+          to: user.email,
+          payload: {
+            username: user.username,
+            status: "REJECTED",
+            reason,
+          },
+        }).catch(err => console.error(`Failed to enqueue role rejection email: ${err.message}`));
+      }
+    })
+    .catch((err) => console.error(`Failed to fetch user: ${err.message}`));
 
   return { requestId, userId: request.user_id, status: "REJECTED" };
 };
