@@ -7,6 +7,7 @@ import {
   getEventApprovalTemplate,
   getRoleApprovalTemplate,
   getWaitlistNotificationTemplate,
+  getEventReminderTemplate,
 } from "../services/mail.service.js";
 
 const QUEUE_NAME = "email";
@@ -68,6 +69,16 @@ export const emailWorker = new Worker(
         html = getWaitlistNotificationTemplate(
           payload.username,
           payload.eventTitle
+        );
+        break;
+
+      case "event-reminder":
+        subject = `Reminder: ${payload.eventTitle} is starting soon! - Eventra`;
+        html = getEventReminderTemplate(
+          payload.username,
+          payload.eventTitle,
+          payload.eventDate,
+          payload.location
         );
         break;
 

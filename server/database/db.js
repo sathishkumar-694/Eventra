@@ -14,5 +14,14 @@ export const pool = mysql.createPool({
 export const testDB = async () => {
     const [rows] = await pool.query("SELECT 1");
     return rows;
+};
 
+export const runMigrations = async () => {
+    const [columns] = await pool.query(
+        "SELECT COLUMN_NAME FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = ? AND TABLE_NAME = 'events' AND COLUMN_NAME = 'reminder_sent'",
+        [process.env.DB_NAME]
+    );
+    if (columns.length === 0) {
+        await pool.query("ALTER TABLE events ADD COLUMN reminder_sent TINYINT(1) DEFAULT 0");
+    }
 };
