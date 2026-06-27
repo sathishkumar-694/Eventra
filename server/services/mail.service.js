@@ -103,3 +103,28 @@ export const getWaitlistNotificationTemplate = (username, eventTitle) => {
     </div>
   `;
 };
+
+export const getEventReminderTemplate = (username, eventTitle, eventDate, location) => {
+  const formattedDate = new Date(eventDate).toLocaleString("en-US", {
+    weekday: "long",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+
+  return `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #ddd; border-radius: 8px;">
+      <h2 style="color: #FF9800;">Upcoming Event Reminder!</h2>
+      <p>Hi <strong>${username}</strong>,</p>
+      <p>This is a reminder that the event <strong>${eventTitle}</strong> is starting in less than 24 hours.</p>
+      <hr style="border: 0; border-top: 1px solid #eee;" />
+      <p><strong>When:</strong> ${formattedDate}</p>
+      <p><strong>Where:</strong> ${location}</p>
+      <hr style="border: 0; border-top: 1px solid #eee;" />
+      <p>We look forward to seeing you there!</p>
+      <p>Thank you, <br/>The Eventra Team</p>
+    </div>
+  `;
+};
