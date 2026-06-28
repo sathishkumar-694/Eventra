@@ -4,7 +4,7 @@ import cors from "cors";
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
 import cookieParser from "cookie-parser";
-import { testDB } from "./database/db.js";
+import { testDB, runMigrations } from "./database/db.js";
 import authRoutes from "./features/auth/auth.routes.js";
 import errorMiddleware from "./middleware/error.middleware.js";
 import eventRoutes from "./features/events/event.routes.js";
@@ -16,7 +16,11 @@ import waitlistRoutes from "./features/waitlist/waitlist.routes.js";
 import "./queues/email.queue.js";
 import "./queues/seat-hold.queue.js";
 import "./queues/waitlist.queue.js";
+import { initScheduler } from "./queues/cron.queue.js";
 dotenv.config();
+
+await runMigrations().catch(err => console.error("Migration failed:", err));
+initScheduler().catch(err => console.error("Scheduler initialization failed:", err));
 
 const PORT = process.env.PORT;
 
