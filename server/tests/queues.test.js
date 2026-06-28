@@ -5,6 +5,7 @@ import {
   getEventApprovalTemplate,
   getRoleApprovalTemplate,
   getWaitlistNotificationTemplate,
+  getEventReminderTemplate,
 } from "../services/mail.service.js";
 import { redisConnection } from "../config/redis.js";
 
@@ -40,6 +41,11 @@ async function runQueueUnitTests() {
 
     const waitlistHtml = getWaitlistNotificationTemplate("John Doe", "Tech Summit");
     assert.ok(waitlistHtml.includes("30 minutes"), "Waitlist notification must warn user about 30 min limit");
+
+    const reminderHtml = getEventReminderTemplate("John Doe", "Tech Summit", new Date(), "Room A");
+    assert.ok(reminderHtml.includes("John Doe"), "Reminder template must include username");
+    assert.ok(reminderHtml.includes("Tech Summit"), "Reminder template must include event title");
+    assert.ok(reminderHtml.includes("Room A"), "Reminder template must include location");
 
     console.log("[SUCCESS] All HTML email templates verified successfully.");
   } catch (err) {
