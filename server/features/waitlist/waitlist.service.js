@@ -11,6 +11,7 @@ import {
   getFirstWaitlistRepository,
   updateWaitlistStatusRepository,
   getWaitlistCountRepository,
+  getUserWaitlistsRepository,
 } from "./waitlist.repository.js";
 
 export const createWaitlistService = async (userId, eventId) => {
@@ -109,4 +110,8 @@ export const notifyWaitlistService = async (eventId) => {
   }
 
   return { notifiedUserId: next.user_id, waitlistId: next.id };
+};
+
+export const getUserWaitlistsService = async (userId) => {
+  return await getUserWaitlistsRepository(userId);
 };

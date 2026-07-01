@@ -70,3 +70,14 @@ export const getWaitlistCountRepository = async (eventId) => {
   );
   return row.total;
 };
+
+export const getUserWaitlistsRepository = async (userId) => {
+  const [rows] = await pool.execute(
+    `SELECT w.*, e.title AS event_title, e.event_date, e.location 
+     FROM waitlist w 
+     JOIN events e ON w.event_id = e.id 
+     WHERE w.user_id = ?`,
+    [userId]
+  );
+  return rows;
+};
