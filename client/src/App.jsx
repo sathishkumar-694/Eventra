@@ -5,6 +5,9 @@ import Navbar from './components/Navbar';
 import LandingPage from './pages/LandingPage';
 import Dashboard from './pages/Dashboard';
 import EventsPage from './pages/EventsPage';
+import EventDetailsPage from './pages/EventDetailsPage';
+import AdminPage from './pages/AdminPage';
+import TicketValidation from './pages/TicketValidation';
 import ProtectedRoute from './routes/ProtectedRoute';
 import './App.css';
 
@@ -22,12 +25,23 @@ const AppContent = () => {
                 <Route path="/login"     element={<Login />} />
                 <Route path="/register"  element={<Register />} />
                 <Route path="/events"    element={<EventsPage />} />
+                <Route path="/events/:id" element={<EventDetailsPage />} />
+                <Route path="/tickets/validate/:bookingId" element={<TicketValidation />} />
 
                 <Route
                     path="/dashboard"
                     element={
                         <ProtectedRoute>
                             <Dashboard />
+                        </ProtectedRoute>
+                    }
+                />
+
+                <Route
+                    path="/admin"
+                    element={
+                        <ProtectedRoute allowedRoles={['ADMIN']}>
+                            <AdminPage />
                         </ProtectedRoute>
                     }
                 />

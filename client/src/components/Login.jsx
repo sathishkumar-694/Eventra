@@ -26,7 +26,7 @@ function Login() {
     try {
       const response = await authAPI.login({ email, password });
 
-      setAuth(response.token, response.data, rememberMe);
+      setAuth(response.accessToken, response.data, rememberMe);
       navigate('/dashboard');
     } catch (err) {
       setError(err.message || 'Login failed. Please check your credentials.');

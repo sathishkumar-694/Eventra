@@ -27,4 +27,10 @@ export const authAPI = {
     request('/auth/logout', {
       method: 'POST',
     }),
+
+  updateProfile: (profileData) =>
+    request('/auth/profile', {
+      method: 'PATCH',
+      body: JSON.stringify(profileData),
+    }),
 };

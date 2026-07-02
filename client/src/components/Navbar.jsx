@@ -47,6 +47,15 @@ const Navbar = () => {
                             Dashboard
                         </Link>
                     )}
+                    {loggedIn && user?.role === 'ADMIN' && (
+                        <Link
+                            to="/admin"
+                            className={`navbar-link ${isActive('/admin') ? 'active' : ''}`}
+                            onClick={() => setMenuOpen(false)}
+                        >
+                            Admin Panel
+                        </Link>
+                    )}
                 </div>
 
                 <div className="navbar-right">

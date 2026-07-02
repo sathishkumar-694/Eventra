@@ -83,17 +83,34 @@ export default function EventsPage() {
   const [error, setError] = useState(null);
   const [page, setPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
+  const [locations, setLocations] = useState([]);
 
   const [filters, setFilters] = useState({
     search: '',
     location: '',
     minPrice: '',
     maxPrice: '',
+    category: 'All',
+    dateFilter: '',
     sortBy: 'created_at',
   });
   const [debouncedSearch, setDebouncedSearch] = useState('');
 
   const LIMIT = 9;
+
+  useEffect(() => {
+    const fetchLocations = async () => {
+      try {
+        const res = await eventsAPI.getLocations();
+        if (res.success) {
+          setLocations(res.data || []);
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    };
+    fetchLocations();
+  }, []);
 
   useEffect(() => {
     const t = setTimeout(() => setDebouncedSearch(filters.search), 400);
@@ -109,6 +126,8 @@ export default function EventsPage() {
         location: filters.location,
         minPrice: filters.minPrice,
         maxPrice: filters.maxPrice,
+        category: filters.category === 'All' ? undefined : filters.category,
+        dateFilter: filters.dateFilter || undefined,
         sortBy: filters.sortBy,
         page,
         limit: LIMIT,
@@ -120,7 +139,7 @@ export default function EventsPage() {
     } finally {
       setLoading(false);
     }
-  }, [debouncedSearch, filters.location, filters.minPrice, filters.maxPrice, filters.sortBy, page]);
+  }, [debouncedSearch, filters.location, filters.minPrice, filters.maxPrice, filters.category, filters.dateFilter, filters.sortBy, page]);
 
   useEffect(() => {
     fetchEvents();
@@ -128,19 +147,19 @@ export default function EventsPage() {
 
   useEffect(() => {
     setPage(1);
-  }, [debouncedSearch, filters.location, filters.minPrice, filters.maxPrice, filters.sortBy]);
+  }, [debouncedSearch, filters.location, filters.minPrice, filters.maxPrice, filters.category, filters.dateFilter, filters.sortBy]);
 
   const handleFilterChange = (key, value) => {
     setFilters(prev => ({ ...prev, [key]: value }));
   };
 
   const clearFilters = () => {
-    setFilters({ search: '', location: '', minPrice: '', maxPrice: '', sortBy: 'created_at' });
+    setFilters({ search: '', location: '', minPrice: '', maxPrice: '', category: 'All', dateFilter: '', sortBy: 'created_at' });
     setPage(1);
   };
 
   const totalPages = Math.ceil(totalCount / LIMIT);
-  const hasActiveFilters = filters.search || filters.location || filters.minPrice || filters.maxPrice;
+  const hasActiveFilters = filters.search || filters.location || filters.minPrice || filters.maxPrice || filters.category !== 'All' || filters.dateFilter;
 
   return (
     <div className="events-page">
@@ -172,13 +191,46 @@ export default function EventsPage() {
 
             <div className="filter-group">
               <label className="filter-label">Location</label>
-              <input
-                type="text"
-                placeholder="Any location"
+              <select
                 value={filters.location}
                 onChange={e => handleFilterChange('location', e.target.value)}
-                className="filter-input"
-              />
+                className="filter-select"
+              >
+                <option value="">Any location</option>
+                {locations.map(loc => (
+                  <option key={loc} value={loc}>{loc}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="filter-group">
+              <label className="filter-label">Date Filter</label>
+              <div className="filter-date-buttons">
+                <button
+                  className={`date-filter-btn ${filters.dateFilter === '' ? 'active' : ''}`}
+                  onClick={() => handleFilterChange('dateFilter', '')}
+                >
+                  All Dates
+                </button>
+                <button
+                  className={`date-filter-btn ${filters.dateFilter === 'today' ? 'active' : ''}`}
+                  onClick={() => handleFilterChange('dateFilter', 'today')}
+                >
+                  Today
+                </button>
+                <button
+                  className={`date-filter-btn ${filters.dateFilter === 'weekend' ? 'active' : ''}`}
+                  onClick={() => handleFilterChange('dateFilter', 'weekend')}
+                >
+                  This Weekend
+                </button>
+                <button
+                  className={`date-filter-btn ${filters.dateFilter === 'next-week' ? 'active' : ''}`}
+                  onClick={() => handleFilterChange('dateFilter', 'next-week')}
+                >
+                  Next Week
+                </button>
+              </div>
             </div>
 
             <div className="filter-group">
@@ -220,6 +272,18 @@ export default function EventsPage() {
         </aside>
 
         <main className="events-page__main">
+          <div className="category-pills">
+            {['All', 'Tech', 'Music', 'Art', 'Business', 'General', 'Sports'].map(cat => (
+              <button
+                key={cat}
+                className={`category-pill ${filters.category === cat ? 'active' : ''}`}
+                onClick={() => handleFilterChange('category', cat)}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
+
           <div className="events-page__results-bar">
             <span className="results-count">
               {loading ? 'Loading...' : `${totalCount} event${totalCount !== 1 ? 's' : ''} found`}
