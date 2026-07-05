@@ -47,4 +47,19 @@ export const deleteRefreshTokenRepository = async (token) => {
         [token]
     );
     return result;
+}
+
+export const updateUserRepository = async (id, fields) => {
+    const keys = [];
+    const values = [];
+    Object.entries(fields).forEach(([key, value]) => {
+        keys.push(`${key} = ?`);
+        values.push(value);
+    });
+    values.push(id);
+    const [result] = await pool.query(
+        `UPDATE users SET ${keys.join(", ")}, updated_at = CURRENT_TIMESTAMP WHERE id = ?`,
+        values
+    );
+    return result;
 }

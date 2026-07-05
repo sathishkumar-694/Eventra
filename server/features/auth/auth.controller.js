@@ -1,4 +1,4 @@
-import { loginService, logoutService, profileService, refreshService, registerService } from "./auth.service.js";
+import { loginService, logoutService, profileService, refreshService, registerService, updateProfileService } from "./auth.service.js";
 
 export const registerController = async (req, res, next) => {
     try {
@@ -65,6 +65,20 @@ export const profileController = async (req, res, next) => {
             success: true,
             message: "user valid",
             user,
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+export const updateProfileController = async (req, res, next) => {
+    try {
+        const userId = req.user.id;
+        const updatedUser = await updateProfileService(userId, req.body);
+        return res.status(200).json({
+            success: true,
+            message: "Profile updated successfully",
+            user: updatedUser,
         });
     } catch (error) {
         next(error);
