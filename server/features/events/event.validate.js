@@ -29,6 +29,8 @@ export const createEventSchema = z.object({
     .number()
     .int("Total seats must be an integer")
     .positive("Total seats must be greater than 0"),
+
+  category: z.enum(["Tech", "Music", "Art", "Business", "General", "Sports"]).default("General").optional(),
 });
 
 export const updateEventSchema = createEventSchema
@@ -43,6 +45,8 @@ export const getEventsQuerySchema = z.object({
   minPrice: z.coerce.number().min(0).optional(),
   maxPrice: z.coerce.number().min(0).optional(),
   date: z.string().optional(),
+  category: z.string().trim().optional(),
+  dateFilter: z.enum(["today", "weekend", "next-week"]).optional(),
   page: z.coerce.number().int().min(1).default(1),
   limit: z.coerce.number().int().min(1).max(50).default(10),
   sortBy: z.enum(["event_date", "price", "created_at"]).default("created_at"),

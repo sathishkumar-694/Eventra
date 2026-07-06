@@ -6,6 +6,10 @@ import {
   updateEventController,
   deleteEventController,
   getOrganizerEventsController,
+  getDistinctLocationsController,
+  cancelEventController,
+  getEventAttendeesController,
+  getOrganizerAnalyticsController,
 } from "./event.controller.js";
 import { getMe } from "../../middleware/auth.middleware.js";
 import { authorize } from "../../middleware/authorize.middleware.js";
@@ -28,6 +32,8 @@ eventRoutes.get(
   getAllEventsController,
 );
 eventRoutes.get("/organizer/events", getMe, getOrganizerEventsController);
+eventRoutes.get("/organizer/analytics", getMe, getOrganizerAnalyticsController);
+eventRoutes.get("/locations", getMe, getDistinctLocationsController);
 eventRoutes.get("/:id", getMe, getEventByIdController);
 eventRoutes.post(
   "/",
@@ -42,5 +48,7 @@ eventRoutes.patch(
   updateEventController,
 );
 eventRoutes.delete("/:id", getMe, deleteEventController);
+eventRoutes.patch("/:id/cancel", getMe, cancelEventController);
+eventRoutes.get("/:id/attendees", getMe, getEventAttendeesController);
 
 export default eventRoutes;

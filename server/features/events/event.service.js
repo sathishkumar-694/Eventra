@@ -6,13 +6,53 @@ import {
   getEventByNameRepository,
   updateEventRepository,
   getOrganizerEventsRepository,
+  getDistinctLocationsRepository,
+  cancelAllEventBookingsRepository,
+  getEventAttendeesRepository,
+  getOrganizerAnalyticsRepository,
 } from "./event.repository.js";
 
 import ApiError from "../../utils/ApiError.js";
 import { randomUUID } from "crypto";
+import { pool } from "../../database/db.js";
+import { emailQueue } from "../../queues/email.queue.js";
 
 export const getAllEventsService = async (filters) => {
-  const response = await getAllEventsRepository(filters);
+  const repositoryFilters = { ...filters };
+  if (filters.dateFilter) {
+    const now = new Date();
+    const dayOfWeek = now.getDay();
+    if (filters.dateFilter === "today") {
+      const start = new Date(now);
+      start.setHours(0, 0, 0, 0);
+      const end = new Date(now);
+      end.setHours(23, 59, 59, 999);
+      repositoryFilters.startDate = start;
+      repositoryFilters.endDate = end;
+    } else if (filters.dateFilter === "weekend") {
+      const daysToSaturday = (6 - dayOfWeek + 7) % 7;
+      const daysToSunday = dayOfWeek === 0 ? 0 : 7 - dayOfWeek;
+      const start = new Date(now);
+      start.setDate(now.getDate() + daysToSaturday);
+      start.setHours(0, 0, 0, 0);
+      const end = new Date(now);
+      end.setDate(now.getDate() + daysToSunday);
+      end.setHours(23, 59, 59, 999);
+      repositoryFilters.startDate = start;
+      repositoryFilters.endDate = end;
+    } else if (filters.dateFilter === "next-week") {
+      const daysToNextMonday = dayOfWeek === 0 ? 1 : 8 - dayOfWeek;
+      const start = new Date(now);
+      start.setDate(now.getDate() + daysToNextMonday);
+      start.setHours(0, 0, 0, 0);
+      const end = new Date(start);
+      end.setDate(start.getDate() + 6);
+      end.setHours(23, 59, 59, 999);
+      repositoryFilters.startDate = start;
+      repositoryFilters.endDate = end;
+    }
+  }
+  const response = await getAllEventsRepository(repositoryFilters);
   return response;
 };
 
@@ -96,4 +136,72 @@ export const deleteEventService = async (eventId, userId) => {
   }
 
   return result;
+};
+
+export const getDistinctLocationsService = async () => {
+  return await getDistinctLocationsRepository();
+};
+
+export const cancelEventService = async (eventId, userId) => {
+  const [rows] = await pool.query("SELECT * FROM events WHERE id = ?", [eventId]);
+  if (rows.length === 0) {
+    throw new ApiError(404, "Event not found");
+  }
+
+  const event = rows[0];
+  if (event.organizer_id !== userId) {
+    throw new ApiError(403, "You are not authorized to cancel this event");
+  }
+
+  if (event.approval_status === "CANCELLED") {
+    throw new ApiError(400, "Event is already cancelled");
+  }
+
+  const attendees = await getEventAttendeesRepository(eventId);
+  const activeBookings = attendees.filter(b => b.booking_status === "CONFIRMED" || b.booking_status === "BOOKED");
+
+  const conn = await pool.getConnection();
+  try {
+    await conn.beginTransaction();
+
+    await updateEventRepository(eventId, { approval_status: "CANCELLED" });
+    await cancelAllEventBookingsRepository(conn, eventId);
+
+    await conn.commit();
+
+    for (const booking of activeBookings) {
+      emailQueue.add(`event-cancel-notify-${booking.id}`, {
+        type: "booking-cancellation",
+        to: booking.email,
+        payload: {
+          username: booking.username,
+          eventTitle: event.title,
+          seats: booking.ticket_count,
+        },
+      }).catch(err => console.error(`Failed to enqueue email: ${err.message}`));
+    }
+  } catch (error) {
+    await conn.rollback();
+    throw error;
+  } finally {
+    conn.release();
+  }
+};
+
+export const getEventAttendeesService = async (eventId, userId) => {
+  const [rows] = await pool.query("SELECT * FROM events WHERE id = ?", [eventId]);
+  if (rows.length === 0) {
+    throw new ApiError(404, "Event not found");
+  }
+
+  const event = rows[0];
+  if (event.organizer_id !== userId) {
+    throw new ApiError(403, "You are not authorized to view attendees for this event");
+  }
+
+  return await getEventAttendeesRepository(eventId);
+};
+
+export const getOrganizerAnalyticsService = async (userId) => {
+  return await getOrganizerAnalyticsRepository(userId);
 };
