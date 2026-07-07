@@ -3,6 +3,7 @@ import {
   createBookingController,
   getUserBookingsController,
   cancelBookingController,
+  validateBookingPublicController,
 } from "./booking.controller.js";
 import {
   createSeatHoldController,
@@ -18,6 +19,7 @@ const bookingRoutes = express.Router();
 
 bookingRoutes.post("/", getMe, validate(createBookingSchema), createBookingController);
 bookingRoutes.get("/", getMe, getUserBookingsController);
+bookingRoutes.get("/validate/:id", validateBookingPublicController);
 bookingRoutes.patch("/:id/cancel", getMe, cancelBookingController);
 
 bookingRoutes.get("/hold/status", getMe, getSeatHoldController);

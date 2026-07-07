@@ -2,13 +2,26 @@ import { pool } from "../../database/db.js";
 
 export const getUserBookingRepository = async(userId)=>
 {
-    const [result] = await pool.execute("SELECT * from bookings where user_id = ?" , [userId]) ;
+    const [result] = await pool.execute(
+        `SELECT b.*, e.title AS event_title, e.event_date, e.location, e.description, e.price 
+         FROM bookings b
+         JOIN events e ON b.event_id = e.id
+         WHERE b.user_id = ?
+         ORDER BY b.created_at DESC`,
+        [userId]
+    ) ;
     return result;
 }
 
 export const getBookingsByIdRepository = async(bookingId, userId)=>
 {
-    const [result] = await pool.execute("SELECT * from bookings where id = ? AND user_id = ?" , [bookingId, userId]) ;
+    const [result] = await pool.execute(
+        `SELECT b.*, e.title AS event_title, e.event_date, e.location, e.description, e.price 
+         FROM bookings b
+         JOIN events e ON b.event_id = e.id
+         WHERE b.id = ? AND b.user_id = ?`,
+        [bookingId, userId]
+    ) ;
     return result;
 }
 

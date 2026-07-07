@@ -165,3 +165,29 @@ export const cancelBookingService = async (bookingId, userId) => {
     conn.release();
   }
 };
+
+export const validateBookingPublicService = async (bookingId) => {
+  const [rows] = await pool.query(
+    `SELECT b.id, b.ticket_count, b.booking_status, e.title AS event_title, e.event_date, e.location, u.username 
+     FROM bookings b 
+     JOIN events e ON b.event_id = e.id 
+     JOIN users u ON b.user_id = u.id 
+     WHERE b.id = ?`,
+    [bookingId]
+  );
+  if (rows.length === 0) {
+    return { valid: false, message: "Ticket not found or invalid ID" };
+  }
+  const booking = rows[0];
+  if (booking.booking_status !== "CONFIRMED" && booking.booking_status !== "BOOKED") {
+    return { valid: false, message: `Ticket is ${booking.booking_status.toLowerCase()}` };
+  }
+  return {
+    valid: true,
+    eventTitle: booking.event_title,
+    eventDate: booking.event_date,
+    location: booking.location,
+    username: booking.username,
+    ticketCount: booking.ticket_count,
+  };
+};
