@@ -56,11 +56,17 @@ export const createSeatHoldService = async (userId, eventId, seatsHeld) => {
 
     await conn.commit();
 
-    seatHoldQueue.add(
-      `seat-hold-expiry-${holdId}`,
-      { holdId },
-      { delay: HOLD_DURATION_MS }
-    ).catch(err => console.error(`Failed to enqueue delayed seat hold expiry: ${err.message}`));
+    seatHoldQueue
+      .add(
+        `seat-hold-expiry-${holdId}`,
+        { holdId },
+        { delay: HOLD_DURATION_MS },
+      )
+      .catch((err) =>
+        console.error(
+          `Failed to enqueue delayed seat hold expiry: ${err.message}`,
+        ),
+      );
 
     return { holdId, eventId: event.id, seatsHeld, expiresAt };
   } catch (err) {
@@ -111,7 +117,11 @@ export const getSeatHoldService = async (userId, eventId) => {
   };
 };
 
-export const convertSeatHoldToBookingService = async (conn, holdId, bookingId) => {
+export const convertSeatHoldToBookingService = async (
+  conn,
+  holdId,
+  bookingId,
+) => {
   const holds = await getSeatHoldByIdRepository(holdId);
   if (holds.length === 0)
     throw new ApiError(404, "Seat hold not found or already expired");

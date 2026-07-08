@@ -1,4 +1,5 @@
 import { pool } from "../database/db.js";
+import { runMigrations } from "./migration.js";
 
 const BASE_URL = "http://localhost:5000";
 
@@ -29,8 +30,9 @@ async function cleanupDB() {
 async function runTests() {
   console.log("Starting full structured backend test...");
   try {
+    await runMigrations();
     await cleanupDB();
-    logTest("DB Cleanup", true, "Cleared previous test records successfully");
+    logTest("DB Cleanup", true, "Database migrated and test records cleared successfully");
   } catch (err) {
     logTest("DB Cleanup", false, err.message);
     process.exit(1);

@@ -15,6 +15,7 @@ import {
 import { getRoleRequestByIdRepository } from "../role/role.repository.js";
 import { findUserById } from "../auth/auth.repository.js";
 import { emailQueue } from "../../queues/email.queue.js";
+import { createNotificationService } from "../notifications/notification.service.js";
 
 export const getAllEventsService = async () => {
   const response = await getAllEventsRepository();
@@ -47,6 +48,13 @@ export const approveEventsService = async (id, adminId) => {
   if (approveEvent.affectedRows == 0)
     throw new ApiError(500, "Unable to approve event");
 
+  createNotificationService(
+    response[0].organizer_id,
+    "Event Approved",
+    `🎪 Congratulations! Your event submission "${response[0].title}" has been approved.`,
+    "admin"
+  ).catch(err => console.error("Notification creation failed:", err));
+
   findUserById(response[0].organizer_id)
     .then((organizer) => {
       if (organizer) {
@@ -77,6 +85,13 @@ export const rejectEventsService = async (id, reason, adminId) => {
   const rejectEvent = await rejectEventsRepository(id, reason, adminId);
   if (rejectEvent.affectedRows == 0)
     throw new ApiError(500, "Unable to reject event");
+
+  createNotificationService(
+    response[0].organizer_id,
+    "Event Rejected",
+    `❌ Your event submission "${response[0].title}" was rejected. Reason: ${reason}`,
+    "admin"
+  ).catch(err => console.error("Notification creation failed:", err));
 
   findUserById(response[0].organizer_id)
     .then((organizer) => {

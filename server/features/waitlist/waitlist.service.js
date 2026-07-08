@@ -70,6 +70,7 @@ export const deleteWaitlistService = async (userId, eventId) => {
 import { findUserById } from "../auth/auth.repository.js";
 import { emailQueue } from "../../queues/email.queue.js";
 import { waitlistQueue } from "../../queues/waitlist.queue.js";
+import { createNotificationService } from "../notifications/notification.service.js";
 
 export const notifyWaitlistService = async (eventId) => {
   const waiting = await getFirstWaitlistRepository(eventId);
@@ -92,6 +93,13 @@ export const notifyWaitlistService = async (eventId) => {
           eventTitle: event.title,
         },
       }).catch(err => console.error(`Failed to enqueue waitlist email: ${err.message}`));
+
+      createNotificationService(
+        next.user_id,
+        "Waitlist Promotion",
+        `🚀 Good news! A seat opened up for "${event.title}". You have 30 minutes to claim your ticket before it goes to the next person.`,
+        "waitlist"
+      ).catch(err => console.error("Notification creation failed:", err));
 
       waitlistQueue.add(
         `waitlist-timeout-${next.id}`,

@@ -16,6 +16,7 @@ import ApiError from "../../utils/ApiError.js";
 import { randomUUID } from "crypto";
 import { pool } from "../../database/db.js";
 import { emailQueue } from "../../queues/email.queue.js";
+import { createNotificationService } from "../notifications/notification.service.js";
 
 export const getAllEventsService = async (filters) => {
   const repositoryFilters = { ...filters };
@@ -170,6 +171,13 @@ export const cancelEventService = async (eventId, userId) => {
     await conn.commit();
 
     for (const booking of activeBookings) {
+      createNotificationService(
+        booking.user_id,
+        "Event Cancelled",
+        `⚠️ The event "${event.title}" has been cancelled by the host. A refund of your tickets has been processed.`,
+        "cancellation"
+      ).catch(err => console.error("Notification creation failed:", err));
+
       emailQueue.add(`event-cancel-notify-${booking.id}`, {
         type: "booking-cancellation",
         to: booking.email,

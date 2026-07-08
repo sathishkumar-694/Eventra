@@ -15,6 +15,7 @@ import { getSeatHoldByIdRepository, deleteSeatHoldRepository } from "./seat-hold
 import { findUserById } from "../auth/auth.repository.js";
 import { deleteWaitlistRepository } from "../waitlist/waitlist.repository.js";
 import { emailQueue } from "../../queues/email.queue.js";
+import { createNotificationService } from "../notifications/notification.service.js";
 
 export const createBookingService = async (userId, eventId, seatsBooked, holdId = null) => {
   const conn = await pool.getConnection();
@@ -78,6 +79,13 @@ export const createBookingService = async (userId, eventId, seatsBooked, holdId 
 
     await conn.commit();
 
+    createNotificationService(
+      userId,
+      "Booking Confirmed",
+      `Your booking for ${eventTitle} (${targetSeatsBooked} seats) has been successfully confirmed!`,
+      "booking"
+    ).catch(err => console.error("Notification creation failed:", err));
+
     findUserById(userId)
       .then((user) => {
         if (user) {
@@ -138,6 +146,13 @@ export const cancelBookingService = async (bookingId, userId) => {
     } catch (err) {}
 
     await conn.commit();
+
+    createNotificationService(
+      userId,
+      "Booking Cancelled",
+      `Your booking for ${eventTitle} has been cancelled successfully.`,
+      "cancellation"
+    ).catch(err => console.error("Notification creation failed:", err));
 
     findUserById(userId)
       .then((user) => {

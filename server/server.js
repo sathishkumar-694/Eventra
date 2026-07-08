@@ -4,7 +4,6 @@ import cors from "cors";
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
 import cookieParser from "cookie-parser";
-import { testDB, runMigrations } from "./database/db.js";
 import authRoutes from "./features/auth/auth.routes.js";
 import errorMiddleware from "./middleware/error.middleware.js";
 import eventRoutes from "./features/events/event.routes.js";
@@ -13,20 +12,21 @@ import bookingRoutes from "./features/bookings/booking.routes.js";
 import roleRoutes from "./features/role/role.routes.js";
 import reviewRoutes from "./features/reviews/review.routes.js";
 import waitlistRoutes from "./features/waitlist/waitlist.routes.js";
+import notificationRoutes from "./features/notifications/notification.routes.js";
 import "./queues/email.queue.js";
 import "./queues/seat-hold.queue.js";
 import "./queues/waitlist.queue.js";
 import { initScheduler } from "./queues/cron.queue.js";
 dotenv.config();
 
-await runMigrations().catch(err => console.error("Migration failed:", err));
-initScheduler().catch(err => console.error("Scheduler initialization failed:", err));
+initScheduler().
+catch(err => console.error("Scheduler initialization failed:", err));
 
 const PORT = process.env.PORT;
 
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 10,
+  max: 10000,
   message: {
     success: false,
     message: "Too many requests, please try again later",
@@ -52,24 +52,8 @@ app.use("/api/bookings", bookingRoutes);
 app.use("/api/roles", roleRoutes);
 app.use("/api/reviews", reviewRoutes);
 app.use("/api/waitlist", waitlistRoutes);
+app.use("/api/notifications", notificationRoutes);
 
-app.get("/health", async (req, res) => {
-  try {
-    const data = await testDB();
-
-    return res.status(200).json({
-      success: true,
-      message: "DB connected",
-      data,
-    });
-  } catch (error) {
-    return res.status(500).json({
-      success: false,
-      message: "Unable to connect",
-      error: error.message,
-    });
-  }
-});
 app.use(errorMiddleware);
 
 app.listen(PORT, () => {

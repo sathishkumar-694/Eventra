@@ -38,7 +38,7 @@ async function runQueueUnitTests() {
 
     const roleApproveHtml = getRoleApprovalTemplate("John Doe", "APPROVED");
     assert.ok(roleApproveHtml.includes("organizer panel"), "Role status template mismatch");
-
+    
     const waitlistHtml = getWaitlistNotificationTemplate("John Doe", "Tech Summit");
     assert.ok(waitlistHtml.includes("30 minutes"), "Waitlist notification must warn user about 30 min limit");
 

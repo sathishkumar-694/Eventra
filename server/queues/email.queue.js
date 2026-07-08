@@ -16,88 +16,99 @@ export const emailQueue = new Queue(QUEUE_NAME, {
   connection: redisConnection,
 });
 
-export const emailWorker = new Worker(
-  QUEUE_NAME,
-  async (job) => {
-    const { type, to, payload } = job.data;
-    console.log(`Processing email job: ${job.id} (Type: ${type}, To: ${to})`);
+emailQueue.on("error", (err) => {
+  console.error("Email queue connection error:", err.message);
+});
 
-    let subject = "";
-    let html = "";
+if (process.env.ENABLE_WORKERS === "true") {
+  const emailWorker = new Worker(
+    QUEUE_NAME,
+    async (job) => {
+      const { type, to, payload } = job.data;
+      console.log(`Processing email job: ${job.id} (Type: ${type}, To: ${to})`);
 
-    switch (type) {
-      case "booking-confirmation":
-        subject = "Booking Confirmed - Eventra";
-        html = getBookingConfirmationTemplate(
-          payload.username,
-          payload.eventTitle,
-          payload.seats,
-          payload.price
-        );
-        break;
+      let subject = "";
+      let html = "";
 
-      case "booking-cancellation":
-        subject = "Booking Cancelled - Eventra";
-        html = getBookingCancellationTemplate(
-          payload.username,
-          payload.eventTitle,
-          payload.seats
-        );
-        break;
+      switch (type) {
+        case "booking-confirmation":
+          subject = "Booking Confirmed - Eventra";
+          html = getBookingConfirmationTemplate(
+            payload.username,
+            payload.eventTitle,
+            payload.seats,
+            payload.price
+          );
+          break;
 
-      case "event-status":
-        subject = `Event Approval Status: ${payload.status} - Eventra`;
-        html = getEventApprovalTemplate(
-          payload.organizerName,
-          payload.eventTitle,
-          payload.status,
-          payload.reason
-        );
-        break;
+        case "booking-cancellation":
+          subject = "Booking Cancelled - Eventra";
+          html = getBookingCancellationTemplate(
+            payload.username,
+            payload.eventTitle,
+            payload.seats
+          );
+          break;
 
-      case "role-status":
-        subject = `Organizer Role Request: ${payload.status} - Eventra`;
-        html = getRoleApprovalTemplate(
-          payload.username,
-          payload.status,
-          payload.reason
-        );
-        break;
+        case "event-status":
+          subject = `Event Approval Status: ${payload.status} - Eventra`;
+          html = getEventApprovalTemplate(
+            payload.organizerName,
+            payload.eventTitle,
+            payload.status,
+            payload.reason
+          );
+          break;
 
-      case "waitlist-notify":
-        subject = "Seat Available! Complete your booking - Eventra";
-        html = getWaitlistNotificationTemplate(
-          payload.username,
-          payload.eventTitle
-        );
-        break;
+        case "role-status":
+          subject = `Organizer Role Request: ${payload.status} - Eventra`;
+          html = getRoleApprovalTemplate(
+            payload.username,
+            payload.status,
+            payload.reason
+          );
+          break;
 
-      case "event-reminder":
-        subject = `Reminder: ${payload.eventTitle} is starting soon! - Eventra`;
-        html = getEventReminderTemplate(
-          payload.username,
-          payload.eventTitle,
-          payload.eventDate,
-          payload.location
-        );
-        break;
+        case "waitlist-notify":
+          subject = "Seat Available! Complete your booking - Eventra";
+          html = getWaitlistNotificationTemplate(
+            payload.username,
+            payload.eventTitle
+          );
+          break;
 
-      default:
-        console.error(`Unknown email job type: ${type}`);
-        return;
+        case "event-reminder":
+          subject = `Reminder: ${payload.eventTitle} is starting soon! - Eventra`;
+          html = getEventReminderTemplate(
+            payload.username,
+            payload.eventTitle,
+            payload.eventDate,
+            payload.location
+          );
+          break;
+
+        default:
+          console.error(`Unknown email job type: ${type}`);
+          return;
+      }
+
+      await sendEmail(to, subject, html);
+    },
+    {
+      connection: redisConnection,
     }
+  );
 
-    await sendEmail(to, subject, html);
-  },
-  {
-    connection: redisConnection,
-  }
-);
+  emailWorker.on("error", (err) => {
+    console.error("Email worker connection error:", err.message);
+  });
 
-emailWorker.on("completed", (job) => {
-  console.log(`Email job ${job.id} completed successfully`);
-});
+  emailWorker.on("completed", (job) => {
+    console.log(`Email job ${job.id} completed successfully`);
+  });
 
-emailWorker.on("failed", (job, err) => {
-  console.error(`Email job ${job?.id} failed: ${err.message}`);
-});
+  
+  emailWorker.on("failed", (job, err) => {
+    console.error(`Email job ${job?.id} failed: ${err.message}`);
+  });
+}
