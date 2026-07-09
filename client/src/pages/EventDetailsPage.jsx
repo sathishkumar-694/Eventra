@@ -83,7 +83,7 @@ export default function EventDetailsPage() {
     if (!hold || timeLeft <= 0) return;
 
     const interval = setInterval(() => {
-      const expires = new Date(hold.expires_at).getTime();
+      const expires = new Date(hold.expiresAt || hold.expires_at).getTime();
       const remaining = Math.round((expires - Date.now()) / 1000);
 
       if (remaining <= 0) {
