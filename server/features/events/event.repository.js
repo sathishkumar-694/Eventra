@@ -16,6 +16,10 @@ export const getAllEventsRepository = async ({
   let query = "SELECT * FROM events WHERE approval_status = 'APPROVED'";
   const params = [];
 
+  if (!date && !startDate && !endDate) {
+    query += " AND event_date >= NOW()";
+  }
+
   if (search) {
     query += " AND title LIKE ?";
     params.push(`%${search}%`);
@@ -150,15 +154,15 @@ export const deleteEventRepository = async (eventId) => {
 
 export const getDistinctLocationsRepository = async () => {
   const [rows] = await pool.query(
-    "SELECT DISTINCT location FROM events WHERE approval_status = 'APPROVED'"
+    "SELECT DISTINCT location FROM events WHERE approval_status = 'APPROVED'",
   );
-  return rows.map(r => r.location);
+  return rows.map((r) => r.location);
 };
 
 export const cancelAllEventBookingsRepository = async (conn, eventId) => {
   const [result] = await conn.execute(
     "UPDATE bookings SET booking_status = 'CANCELLED' WHERE event_id = ? AND booking_status IN ('CONFIRMED', 'BOOKED')",
-    [eventId]
+    [eventId],
   );
   return result;
 };
@@ -170,7 +174,7 @@ export const getEventAttendeesRepository = async (eventId) => {
      JOIN users u ON b.user_id = u.id 
      WHERE b.event_id = ?
      ORDER BY b.created_at DESC`,
-    [eventId]
+    [eventId],
   );
   return rows;
 };
@@ -178,7 +182,7 @@ export const getEventAttendeesRepository = async (eventId) => {
 export const getOrganizerAnalyticsRepository = async (organizerId) => {
   const [[{ totalEvents }]] = await pool.query(
     "SELECT COUNT(*) AS totalEvents FROM events WHERE organizer_id = ?",
-    [organizerId]
+    [organizerId],
   );
 
   const [[{ totalTicketsSold }]] = await pool.query(
@@ -186,7 +190,7 @@ export const getOrganizerAnalyticsRepository = async (organizerId) => {
      FROM bookings b 
      JOIN events e ON b.event_id = e.id 
      WHERE e.organizer_id = ? AND b.booking_status IN ('CONFIRMED', 'BOOKED')`,
-    [organizerId]
+    [organizerId],
   );
 
   const [[{ totalRevenue }]] = await pool.query(
@@ -194,7 +198,7 @@ export const getOrganizerAnalyticsRepository = async (organizerId) => {
      FROM bookings b 
      JOIN events e ON b.event_id = e.id 
      WHERE e.organizer_id = ? AND b.booking_status IN ('CONFIRMED', 'BOOKED')`,
-    [organizerId]
+    [organizerId],
   );
 
   const [[{ seatsSold, totalSeats }]] = await pool.query(
@@ -202,7 +206,7 @@ export const getOrganizerAnalyticsRepository = async (organizerId) => {
             COALESCE(SUM(e.total_seats), 0) AS totalSeats 
      FROM events e 
      WHERE e.organizer_id = ? AND e.approval_status != 'REJECTED'`,
-    [organizerId]
+    [organizerId],
   );
 
   const [eventBreakdown] = await pool.query(
@@ -211,10 +215,11 @@ export const getOrganizerAnalyticsRepository = async (organizerId) => {
             ((total_seats - available_seats) * price) AS event_revenue
      FROM events 
      WHERE organizer_id = ?`,
-    [organizerId]
+    [organizerId],
   );
 
-  const occupancyRate = totalSeats > 0 ? Math.round((seatsSold / totalSeats) * 100) : 0;
+  const occupancyRate =
+    totalSeats > 0 ? Math.round((seatsSold / totalSeats) * 100) : 0;
 
   return {
     totalEvents,

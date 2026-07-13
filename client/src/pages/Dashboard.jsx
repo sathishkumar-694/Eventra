@@ -12,7 +12,11 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const user = getUser();
 
-  const [activeTab, setActiveTab] = useState('bookings');
+  const [activeTab, setActiveTab] = useState(() => sessionStorage.getItem('dashboard_tab') || 'bookings');
+
+  useEffect(() => {
+    sessionStorage.setItem('dashboard_tab', activeTab);
+  }, [activeTab]);
   const [bookings, setBookings] = useState([]);
   const [waitlists, setWaitlists] = useState([]);
   const [organizerEvents, setOrganizerEvents] = useState([]);
@@ -53,11 +57,23 @@ export default function Dashboard() {
   const [analytics, setAnalytics] = useState(null);
   const [showTicketModal, setShowTicketModal] = useState(false);
   const [ticketData, setTicketData] = useState(null);
+  const [customAlert, setCustomAlert] = useState({ show: false, title: '', message: '', onConfirm: null });
 
   const fetchData = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
+      const profileRes = await authAPI.getProfile();
+      if (profileRes.success && profileRes.user) {
+        const localUser = getUser();
+        if (localUser && localUser.role !== profileRes.user.role) {
+          const newToken = profileRes.accessToken || getToken();
+          setAuth(newToken, profileRes.user);
+          window.location.reload();
+          return;
+        }
+      }
+
       const bookingsRes = await bookingsAPI.getUserBookings();
       setBookings(bookingsRes.data || []);
 
@@ -207,23 +223,39 @@ export default function Dashboard() {
         setRosterData(res.data || []);
       }
     } catch (err) {
-      alert(`Failed to load attendees: ${err.message}`);
+      setCustomAlert({
+        show: true,
+        title: 'Error Loading Attendees',
+        message: err.message,
+        onConfirm: null
+      });
     } finally {
       setRosterLoading(false);
     }
   };
 
   const handleCancelOrganizerEvent = async (eventId) => {
-    if (!window.confirm('Are you sure you want to cancel this event? This will refund all bookings and notify attendees.')) return;
-    setActionLoading(true);
-    try {
-      await eventsAPI.cancel(eventId);
-      await fetchData();
-    } catch (err) {
-      alert(`Failed to cancel event: ${err.message}`);
-    } finally {
-      setActionLoading(false);
-    }
+    setCustomAlert({
+      show: true,
+      title: 'Confirm Event Cancellation',
+      message: 'Are you sure you want to cancel this event? This will refund all bookings and notify attendees.',
+      onConfirm: async () => {
+        setActionLoading(true);
+        try {
+          await eventsAPI.cancel(eventId);
+          await fetchData();
+        } catch (err) {
+          setCustomAlert({
+            show: true,
+            title: 'Cancellation Failed',
+            message: err.message,
+            onConfirm: null
+          });
+        } finally {
+          setActionLoading(false);
+        }
+      }
+    });
   };
 
   const downloadAttendeesCSV = (eventTitle, roster) => {
@@ -841,6 +873,51 @@ export default function Dashboard() {
                     🖨️ Print Ticket
                   </button>
                 </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {customAlert.show && (
+        <div className="create-event-modal-backdrop" style={{ zIndex: 2000 }}>
+          <div className="create-event-modal" style={{ maxWidth: '400px' }}>
+            <div className="modal-header">
+              <h2>{customAlert.title}</h2>
+              <button className="modal-close-btn" onClick={() => setCustomAlert({ show: false, title: '', message: '', onConfirm: null })}>×</button>
+            </div>
+            <div className="modal-body-content">
+              <p style={{ color: 'var(--color-text-secondary)', lineHeight: '1.6', margin: '0 0 var(--spacing-lg) 0' }}>
+                {customAlert.message}
+              </p>
+              <div className="modal-actions" style={{ justifyContent: 'flex-end', gap: 'var(--spacing-sm)' }}>
+                {customAlert.onConfirm ? (
+                  <>
+                    <button 
+                      className="modal-btn secondary" 
+                      onClick={() => setCustomAlert({ show: false, title: '', message: '', onConfirm: null })}
+                    >
+                      Cancel
+                    </button>
+                    <button 
+                      className="modal-btn primary" 
+                      onClick={async () => {
+                        const cb = customAlert.onConfirm;
+                        setCustomAlert({ show: false, title: '', message: '', onConfirm: null });
+                        if (cb) await cb();
+                      }}
+                    >
+                      Confirm
+                    </button>
+                  </>
+                ) : (
+                  <button 
+                    className="modal-btn primary" 
+                    onClick={() => setCustomAlert({ show: false, title: '', message: '', onConfirm: null })}
+                  >
+                    OK
+                  </button>
+                )}
               </div>
             </div>
           </div>

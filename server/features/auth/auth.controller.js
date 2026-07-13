@@ -61,10 +61,16 @@ export const profileController = async (req, res, next) => {
     try {
         const userId = req.user.id;
         const user = await profileService(userId);
+        let accessToken = null;
+        if (req.user.role !== user.role) {
+            const { generateAccessToken } = await import("../../utils/jwt.js");
+            accessToken = generateAccessToken(user);
+        }
         return res.status(200).json({
             success: true,
             message: "user valid",
             user,
+            accessToken,
         });
     } catch (error) {
         next(error);

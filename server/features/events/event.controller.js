@@ -127,7 +127,7 @@ export const getEventAttendeesController = async (req, res, next) => {
   try {
     const eventId = req.params.id;
     const userId = req.user.id;
-    const response = await getEventAttendeesService(eventId, userId);
+    const response = await getEventAttendeesService(eventId, userId, req.user.role);
     return res.status(200).json({
       success: true,
       data: response,

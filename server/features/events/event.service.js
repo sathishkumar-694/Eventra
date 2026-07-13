@@ -196,14 +196,14 @@ export const cancelEventService = async (eventId, userId) => {
   }
 };
 
-export const getEventAttendeesService = async (eventId, userId) => {
+export const getEventAttendeesService = async (eventId, userId, role) => {
   const [rows] = await pool.query("SELECT * FROM events WHERE id = ?", [eventId]);
   if (rows.length === 0) {
     throw new ApiError(404, "Event not found");
   }
 
   const event = rows[0];
-  if (event.organizer_id !== userId) {
+  if (event.organizer_id !== userId && role !== 'ADMIN') {
     throw new ApiError(403, "You are not authorized to view attendees for this event");
   }
 

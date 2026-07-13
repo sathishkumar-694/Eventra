@@ -22,6 +22,8 @@ export default function EventDetailsPage() {
   const [timeLeft, setTimeLeft] = useState(0);
   const [waitlistPosition, setWaitlistPosition] = useState(null);
   const [waitlistStatus, setWaitlistStatus] = useState(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [reviewToDelete, setReviewToDelete] = useState(null);
 
   const [bookings, setBookings] = useState([]);
   const [reviews, setReviews] = useState([]);
@@ -132,6 +134,7 @@ export default function EventDetailsPage() {
       await bookingsAPI.create({ holdId: hold.holdId });
       setHold(null);
       setTimeLeft(0);
+      setTicketCount(1);
       setBookingMessage({ type: 'success', text: 'Booking confirmed successfully! You can view it in your dashboard.' });
       fetchEventData();
     } catch (err) {
@@ -213,11 +216,18 @@ export default function EventDetailsPage() {
     }
   };
 
-  const handleDeleteReview = async (reviewId) => {
-    if (!window.confirm('Are you sure you want to delete your review?')) return;
+  const handleDeleteReview = (reviewId) => {
+    setReviewToDelete(reviewId);
+    setShowDeleteConfirm(true);
+  };
+
+  const confirmDeleteReview = async () => {
+    if (!reviewToDelete) return;
+    setShowDeleteConfirm(false);
     setBookingLoading(true);
     try {
-      await reviewsAPI.delete(reviewId);
+      await reviewsAPI.delete(reviewToDelete);
+      setReviewToDelete(null);
       await fetchEventData();
     } catch (err) {
       setReviewError(err.message);
@@ -424,16 +434,19 @@ export default function EventDetailsPage() {
                   <div className="booking-selector-section">
                     <div className="ticket-qty-picker">
                       <label htmlFor="qty">Quantity</label>
-                      <select
+                      <input
                         id="qty"
+                        type="number"
+                        min="1"
+                        max={Math.min(event.available_seats, 10)}
                         value={ticketCount}
-                        onChange={(e) => setTicketCount(Number(e.target.value))}
+                        onChange={(e) => {
+                          const val = Math.max(1, Math.min(Math.min(event.available_seats, 10), Number(e.target.value)));
+                          setTicketCount(val);
+                        }}
                         disabled={bookingLoading}
-                      >
-                        {Array.from({ length: Math.min(event.available_seats, 10) }, (_, i) => i + 1).map((n) => (
-                          <option key={n} value={n}>{n}</option>
-                        ))}
-                      </select>
+                        className="ticket-qty-input"
+                      />
                     </div>
                     <button
                       className="booking-action-btn primary-btn"
@@ -505,6 +518,31 @@ export default function EventDetailsPage() {
           </div>
         </aside>
       </div>
+      {showDeleteConfirm && (
+        <div className="custom-confirm-overlay">
+          <div className="custom-confirm-modal">
+            <h3>Confirm Deletion</h3>
+            <p>Are you sure you want to delete your review? This action cannot be undone.</p>
+            <div className="confirm-modal-buttons">
+              <button 
+                className="confirm-modal-btn yes-btn"
+                onClick={confirmDeleteReview}
+              >
+                Yes, delete
+              </button>
+              <button 
+                className="confirm-modal-btn cancel-btn"
+                onClick={() => {
+                  setShowDeleteConfirm(false);
+                  setReviewToDelete(null);
+                }}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

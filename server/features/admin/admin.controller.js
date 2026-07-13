@@ -18,6 +18,7 @@ export const getAllEventsController = async (req, res, next) => {
     return res.status(200).json({
       success: true,
       response,
+      data: response,
     });
   } catch (error) {
     next(error);
@@ -30,6 +31,7 @@ export const getPendingEventsController = async (req, res, next) => {
     return res.status(200).json({
       success: true,
       response,
+      data: response,
     });
   } catch (error) {
     next(error);
@@ -42,6 +44,7 @@ export const getApprovedEventsController = async (req, res, next) => {
     return res.status(200).json({
       success: true,
       response,
+      data: response,
     });
   } catch (error) {
     next(error);
@@ -54,6 +57,7 @@ export const getRejectedEventsController = async (req, res, next) => {
     return res.status(200).json({
       success: true,
       response,
+      data: response,
     });
   } catch (error) {
     next(error);
