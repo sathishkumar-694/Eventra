@@ -1,0 +1,204 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Eventra REST API Documentation",
+    "version": "1.0.0",
+    "description": "API endpoints, request payloads, and security schemas for the Eventra ticketing aggregator."
+  },
+  "servers": [
+    {
+      "url": "http://localhost:5000/api",
+      "description": "Development Server"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "Enter your Access Token JWT claims."
+      }
+    }
+  },
+  "paths": {
+    "/auth/register": {
+      "post": {
+        "summary": "Register a new user",
+        "tags": ["Authentication"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["username", "email", "password"],
+                "properties": {
+                  "username": { "type": "string" },
+                  "email": { "type": "string" },
+                  "password": { "type": "string" },
+                  "role": { "type": "string", "enum": ["USER", "ORGANIZER", "ADMIN"], "default": "USER" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "User created successfully" },
+          "400": { "description": "Validation error or duplicate user" }
+        }
+      }
+    },
+    "/auth/login": {
+      "post": {
+        "summary": "Log in an existing user",
+        "tags": ["Authentication"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["email", "password"],
+                "properties": {
+                  "email": { "type": "string" },
+                  "password": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Login successful, tokens returned" },
+          "401": { "description": "Invalid credentials" }
+        }
+      }
+    },
+    "/auth/profile": {
+      "get": {
+        "summary": "Get authenticated user profile",
+        "tags": ["Authentication"],
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "Profile data fetched successfully" },
+          "401": { "description": "Unauthorized" }
+        }
+      }
+    },
+    "/events": {
+      "get": {
+        "summary": "List all active approved events",
+        "tags": ["Events"],
+        "parameters": [
+          { "name": "search", "in": "query", "schema": { "type": "string" } },
+          { "name": "location", "in": "query", "schema": { "type": "string" } },
+          { "name": "category", "in": "query", "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Array of approved upcoming events" }
+        }
+      },
+      "post": {
+        "summary": "Create a new event",
+        "tags": ["Events"],
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["title", "location", "eventDate", "totalSeats", "price"],
+                "properties": {
+                  "title": { "type": "string" },
+                  "description": { "type": "string" },
+                  "location": { "type": "string" },
+                  "eventDate": { "type": "string", "format": "date-time" },
+                  "totalSeats": { "type": "integer" },
+                  "price": { "type": "number" },
+                  "category": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Event created and pending approval" }
+        }
+      }
+    },
+    "/bookings/hold": {
+      "post": {
+        "summary": "Create a 5-minute seat lock hold",
+        "tags": ["Bookings"],
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["eventId", "seatsHeld"],
+                "properties": {
+                  "eventId": { "type": "string" },
+                  "seatsHeld": { "type": "integer" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Seats held successfully" }
+        }
+      }
+    },
+    "/bookings": {
+      "post": {
+        "summary": "Confirm ticket booking",
+        "tags": ["Bookings"],
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["holdId", "paymentInfo"],
+                "properties": {
+                  "holdId": { "type": "string" },
+                  "paymentInfo": { "type": "object" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Tickets booked and digital stub generated" }
+        }
+      }
+    },
+    "/waitlist/{eventId}": {
+      "post": {
+        "summary": "Join the waitlist for a sold-out event",
+        "tags": ["Waitlist"],
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "eventId", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "201": { "description": "Waitlist joined successfully" }
+        }
+      }
+    },
+    "/admin/stats": {
+      "get": {
+        "summary": "Retrieve admin metrics and analysis",
+        "tags": ["Admin Panel"],
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "Admin metrics payload" }
+        }
+      }
+    }
+  }
+}
