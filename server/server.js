@@ -13,11 +13,19 @@ import roleRoutes from "./features/role/role.routes.js";
 import reviewRoutes from "./features/reviews/review.routes.js";
 import waitlistRoutes from "./features/waitlist/waitlist.routes.js";
 import notificationRoutes from "./features/notifications/notification.routes.js";
+import assistantRoutes from "./features/assistant/assistant.routes.js";
 import "./queues/email.queue.js";
 import "./queues/seat-hold.queue.js";
 import "./queues/waitlist.queue.js";
 import { initScheduler } from "./queues/cron.queue.js";
+import fs from "fs";
+import swaggerUi from "swagger-ui-express";
+
 dotenv.config();
+
+const swaggerDocument = JSON.parse(
+  fs.readFileSync(new URL("./config/swagger.json", import.meta.url))
+);
 
 initScheduler().
 catch(err => console.error("Scheduler initialization failed:", err));
@@ -53,6 +61,8 @@ app.use("/api/roles", roleRoutes);
 app.use("/api/reviews", reviewRoutes);
 app.use("/api/waitlist", waitlistRoutes);
 app.use("/api/notifications", notificationRoutes);
+app.use("/api/assistant", assistantRoutes);
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 app.use(errorMiddleware);
 

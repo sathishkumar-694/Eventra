@@ -9,6 +9,7 @@ import EventDetailsPage from './pages/EventDetailsPage';
 import AdminPage from './pages/AdminPage';
 import TicketValidation from './pages/TicketValidation';
 import ProtectedRoute from './routes/ProtectedRoute';
+import AssistantWidget from './components/AssistantWidget';
 import './App.css';
 
 const AUTH_ROUTES = ['/login', '/register'];
@@ -48,6 +49,7 @@ const AppContent = () => {
 
                 <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
+            <AssistantWidget />
         </>
     );
 };
