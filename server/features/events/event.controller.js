@@ -13,13 +13,13 @@ import {
 
 export const getAllEventsController = async (req, res, next) => {
   try {
-    const response = await getAllEventsService(req.query);
+    const { rows, total } = await getAllEventsService(req.query);
     return res.status(200).json({
       success: true,
-      page: req.query.page,
-      limit: req.query.limit,
-      count: response.length,
-      data: response,
+      page: Number(req.query.page) || 1,
+      limit: Number(req.query.limit) || 10,
+      count: total,
+      data: rows,
     });
   } catch (err) {
     next(err);

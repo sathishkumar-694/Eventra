@@ -13,51 +13,55 @@ export const getAllEventsRepository = async ({
   limit,
   sortBy,
 }) => {
-  let query = "SELECT * FROM events WHERE approval_status = 'APPROVED'";
+  let baseQuery = " FROM events WHERE approval_status = 'APPROVED'";
   const params = [];
 
   if (!date && !startDate && !endDate) {
-    query += " AND event_date >= NOW()";
+    baseQuery += " AND event_date >= NOW()";
   }
 
   if (search) {
-    query += " AND title LIKE ?";
+    baseQuery += " AND title LIKE ?";
     params.push(`%${search}%`);
   }
   if (location) {
-    query += " AND location LIKE ?";
+    baseQuery += " AND location LIKE ?";
     params.push(`%${location}%`);
   }
   if (minPrice !== undefined) {
-    query += " AND price >= ?";
+    baseQuery += " AND price >= ?";
     params.push(minPrice);
   }
   if (maxPrice !== undefined) {
-    query += " AND price <= ?";
+    baseQuery += " AND price <= ?";
     params.push(maxPrice);
   }
   if (date) {
-    query += " AND DATE(event_date) = ?";
+    baseQuery += " AND DATE(event_date) = ?";
     params.push(date);
   }
   if (category && category !== "All") {
-    query += " AND category = ?";
+    baseQuery += " AND category = ?";
     params.push(category);
   }
   if (startDate) {
-    query += " AND event_date >= ?";
+    baseQuery += " AND event_date >= ?";
     params.push(startDate);
   }
   if (endDate) {
-    query += " AND event_date <= ?";
+    baseQuery += " AND event_date <= ?";
     params.push(endDate);
   }
 
-  query += ` ORDER BY ${sortBy} DESC LIMIT ? OFFSET ?`;
-  params.push(limit, (page - 1) * limit);
+  // Get total count first
+  const countQuery = `SELECT COUNT(*) AS total${baseQuery}`;
+  const [[{ total }]] = await pool.query(countQuery, params);
 
-  const [rows] = await pool.query(query, params);
-  return rows;
+  // Get paginated rows
+  const query = `SELECT *${baseQuery} ORDER BY ${sortBy} DESC LIMIT ? OFFSET ?`;
+  const [rows] = await pool.query(query, [...params, limit, (page - 1) * limit]);
+
+  return { rows, total };
 };
 
 export const getEventByIdRepository = async (id) => {
